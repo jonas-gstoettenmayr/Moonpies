@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"Usage python data/unpack_zip.py portugal"
+
 # Created using Mistral Large 4
 import argparse
 import zipfile
