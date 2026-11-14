@@ -1,3 +1,13 @@
+#custom
+*.zip
+agents.md
+modis
+viirs
+viirs-snpp
+
+# Agent scratchpad
+AgentScratchPad/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

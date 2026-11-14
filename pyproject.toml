@@ -7,7 +7,9 @@ authors = [
     { name = "Jonas-Gstoettenmayr", email = "s2410929009@fhooe.at" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "polars>=2.1.0",
+]
 
 [project.scripts]
 moonpies = "moonpies:main"
