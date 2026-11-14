@@ -1,5 +1,4 @@
 # Moonpies
-# by Moonpies 
 
 # Overview
 Repository of the Moonpies team for the 2026 NASA space apps challenge.

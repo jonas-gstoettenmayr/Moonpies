@@ -9,6 +9,7 @@ from the Meteomatics API, particularly for integrating with NASA FIRMS
 fire detection data.
 """
 
+from moonpies.data_ingestion import fetch_data
 from moonpies.merge import harmonize
 from moonpies.meteomatics import (
     DEFAULT_PARAMS,
@@ -22,6 +23,7 @@ from moonpies.meteomatics import (
 __all__ = [
     "DEFAULT_PARAMS",
     "LEGACY_PARAMS",
+    "fetch_data",
     "fetch_weather_batch",
     "get_weather",
     "get_weather_for_firms",
