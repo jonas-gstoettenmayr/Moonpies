@@ -9,7 +9,7 @@ Team members:
 - Jonas Gstöttenmayr (<jojo.gstoettenmayr@gmail.com>)
 - Stephanie Gstöttenmayr (<stephanie.gstoettenmayr@gmail.com>)
 - David Thomas Lee (<lee.davidtom@proton.me>)
-- Gabriel 
+- Gabriel Boboc (<boboc.gabriel04@gmail.com>) 
 
 ## How It Works
 ## Quick Start
