@@ -1,20 +1,24 @@
 [project]
 name = "moonpies"
 version = "0.1.0"
-description = "Add your description here"
+description = "NASA Space Apps Challenge 2026 - Moonpies team package with Meteomatics API integration"
 readme = "README.md"
 authors = [
     { name = "Jonas-Gstoettenmayr", email = "s2410929009@fhooe.at" }
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "jupyter>=1.1.1",
-    "nbstripout>=0.9.1",
-    "plotly>=7.1.0",
-    "polars>=2.1.0",
-    "pytest>=9.2.0",
     "python-dotenv>=1.2.4",
     "requests>=2.34.2",
+    "polars>=2.1.0",
+    "pandas>=3.1.1",
+    "numpy>=2.5.4",
+    "matplotlib>=3.11.2",
+    "seaborn>=0.13.2",
+    "plotly>=7.1.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "pytest>=9.2.0",
 ]
 
 [project.scripts]
