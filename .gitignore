@@ -4,6 +4,7 @@ agents.md
 modis
 viirs
 viirs-snpp
+viirs-noaa21
 
 # Agent scratchpad
 AgentScratchPad/
@@ -229,3 +230,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+*.csv
+*.py
