@@ -5,6 +5,8 @@ modis
 viirs
 viirs-snpp
 viirs-noaa21
+uv.lock
+test_kernel.ipynb
 
 # Agent scratchpad
 AgentScratchPad/
