@@ -8,6 +8,10 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "jupyter>=1.1.1",
+    "nbstripout>=0.9.1",
+    "plotly>=7.1.0",
+    "polars>=2.1.0",
     "pytest>=9.2.0",
     "python-dotenv>=1.2.4",
     "requests>=2.34.2",
