@@ -32,7 +32,7 @@ import polars as pl
 from moonpies.meteomatics import fetch_weather_batch, DEFAULT_PARAMS
 
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 
 def find_highest_frp_fire(

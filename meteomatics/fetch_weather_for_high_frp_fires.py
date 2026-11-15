@@ -249,7 +249,7 @@ def main():
     
     # Load data
     print("\n1. Loading FIRMS data...")
-    df = pl.read_parquet('data/harmonized.parquet')
+    df = pl.read_parquet(Path(__file__).resolve().parents[1] / 'data' / 'harmonized.parquet')
     print(f"   Total rows: {len(df):,}")
     
     # Filter to 2020 Austria
