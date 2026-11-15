@@ -36,8 +36,8 @@ from moonpies.add_weather_to_harmonized import (
 )
 
 
-DATA_DIR = Path(__file__).resolve().parent / "data"
-OUTPUT_DIR = Path(__file__).resolve().parent / "output"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output"
 
 
 def filter_austria(df: pl.DataFrame) -> pl.DataFrame:

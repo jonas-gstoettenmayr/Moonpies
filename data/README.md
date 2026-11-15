@@ -48,8 +48,7 @@ The following parameters are available through the Meteomatics API with your cur
 Fetch weather data for January 2020 with 0.5° resolution (~55km grid spacing):
 
 ```bash
-cd /home/stephg/Projects/nasa-space-apps/Moonpies
-data/fetch_austria_2020_practical.py --start 2020-01-01 --end 2020-01-31 --resolution 0.5
+cd Moonpies/data/fetch_austria_2020_practical.py --start 2020-01-01 --end 2020-01-31 --resolution 0.5
 ```
 
 ### Command Line Options
