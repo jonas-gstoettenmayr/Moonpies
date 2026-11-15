@@ -108,64 +108,35 @@ This creates:
 
 ## Results
 
+The project merges NASA FIRMS fire data of MODIS and VIIRS sensors to analyze fire risk factors. It harmonizes spatial and temporal datasets for Europe and provides processed outputs for analysis. The Flask web interface enables interactive exploration through maps and time series visualizations. Users can examine correlations between weather parameters and fire events.
+
+
 ## Architecture and Design
 
-### Meteomatics Data
+### Overview
 
-For detailed information on available weather parameters, API usage, and data fetching options, see:
-- [data/README.md](data/README.md) - Complete documentation on fetching Austria weather data
-- [meteomatics module](src/moonpies/meteomatics.py) - Python API for Meteomatics
+The application follows a pipeline architecture: data ingestion → processing → visualization.
+
+NASA FIRMS fire data and Meteomatics weather data are fetched independently, then merged based on spatial and temporal alignment. The processed data powers a Flask web application for interactive exploration.
+
+### Key Components
+
+- **Data Ingestion**: `data/` and `src/moonpies/data_ingestion.py` handle fetching and harmonizing raw FIRMS data
+- **Weather Integration**: `src/moonpies/meteomatics.py` provides the Meteomatics API client
+- **Data Processing**: Scripts in `src/moonpies/` merge fire and weather data, calculate correlations
+- **Web Interface**: `src/app.py` serves a Flask application with interactive maps and charts
 
 ### Project Structure
 
 ```text
 Moonpies/
-├── .gitignore
-├── .python-version
-├── LICENSE
-├── README.md
-├── meteo-api.env              # Meteomatics API credentials
-├── pyproject.toml
-├── uv.lock
-├── data/
-│   ├── README.md              # Weather data fetching guide
-│   ├── download_firms_europe.py  # Download raw FIRMS data for Europe
-│   ├── fetch_austria_2020.py
-│   ├── fetch_austria_2020_practical.py
-│   ├── harmonized.parquet         # Combined FIRMS data, generated
-│   ├── harmonize_grid.parquet     # Grid mixed FIRMS data, generated, needed for web page
-│   ├── single_fire_with_weather.parquet
-│   └── unpack_zip.py # script for extracting country from yearly zip
-├── docs/
-│   ├── GLOSSARY.md
-│   ├── REFERENCES.md
-│   └── merge.md
-├── examples/
-│   ├── fetch_weather_for_firms.py
-│   └── meteomatics_example.py
-├── meteomatics/                # Meteomatics-related scripts
-│   ├── add_weather_to_austria.py
-│   ├── fetch_weather_for_high_frp_fires.py
-│   ├── fetch_weather_for_single_fire.py
-│   ├── fire_weather_visualization.html
-│   ├── meteomatics-test.ipynb
-│   └── visualize_fire_weather.py
-├── src/
-│   ├── __init__.py
-│   ├── app.py
-│   ├── explore.ipynb
-│   └── moonpies/              # Python package
-│       ├── __init__.py
-│       ├── add_weather_to_harmonized.py
-│       ├── consts.py
-│       ├── data_ingestion.py
-│       ├── merge.py
-│       └── meteomatics.py    # Meteomatics API client
-├── tests/
-│   └── test_meteomatics.py
-└── web/
-    ├── europe_activity.json
-    └── index.html
+├── data/               # Raw and processed data, data fetching scripts
+├── src/                # Core application and processing logic
+│   ├── app.py          # Flask web server
+│   └── moonpies/       # Python package with data processing modules
+├── meteomatics/        # Weather data fetching and visualization scripts
+├── web/                # Static web assets
+└── docs/               # Documentation
 ```
 
 ### References
