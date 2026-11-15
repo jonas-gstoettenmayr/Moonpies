@@ -1,42 +1,73 @@
+# Created using Mistral Vibe
 import io
+from datetime import date
 from pathlib import Path
 
-import pandas as pd
+import polars as pl
 from flask import Flask, Response, jsonify, request, send_from_directory
-from werkzeug.utils import secure_filename
 
 from moonpies.consts import DATA_DIR, ROOT_DIR
 
-DATA_FILE: Path = DATA_DIR / "harmonized.parquet"
+DATA_FILE: Path = DATA_DIR / "harmonize_grid.parquet"
 
 app = Flask(__name__, static_folder=str(ROOT_DIR / "web"), static_url_path="")
 
 
-def _load():
-    """Load the dataset
+def _load() -> pl.DataFrame:
+    """Load the harmonized hotspot dataset (one row per detected hotspot)
 
     Returns:
-        _type_: _description_
+        pl.DataFrame: harmonize_grid.parquet with acq_date cast to Date
     """
-    df = pd.read_parquet(DATA_FILE)
-    df["acq_date"] = pd.to_datetime(df["acq_date"])
-    df["sensor"] = df["instrument"]
-    overlap = df[(df["acq_date"] >= "2012-07") & (df["acq_date"] <= "2025-12")]
-    ratio = len(overlap[overlap["sensor"] == "VIIRS"]) / max(
-        len(overlap[overlap["sensor"] == "MODIS"]), 1
-    )
-    df["harmonized_count"] = df["sensor"].map({"VIIRS": 1.0, "MODIS": ratio})
-    return df
+    df = pl.read_parquet(DATA_FILE)
+    return df.with_columns(pl.col("acq_date").cast(pl.Date))
 
 
 _df = _load()
-print(f"Loaded {len(_df):,} rows")
+print(f"Loaded {_df.height:,} rows")
+
+MIN_DATE: date = _df["acq_date"].min()
+MAX_DATE: date = _df["acq_date"].max()
+
+# Markers: when VIIRS coverage starts and when MODIS coverage ends (full date range)
+_viirs = _df.filter(
+    pl.col("satellites").list.eval(pl.element().str.starts_with("N")).list.any()
+)
+_modis = _df.filter(
+    pl.col("satellites").list.contains("Terra")
+    | pl.col("satellites").list.contains("Aqua")
+)
+MARKERS = {
+    "viirs_start": _viirs["acq_date"].min().isoformat() if _viirs.height else None,
+    "modis_end": _modis["acq_date"].max().isoformat() if _modis.height else None,
+}
+print(f"VIIRS starts {MARKERS['viirs_start']}, MODIS ends {MARKERS['modis_end']}")
 
 
-# Frontend of the
+def _filter_range(
+    df: pl.DataFrame, start: date, end: date, region: str | None = None
+) -> pl.DataFrame:
+    """Filter a frame by date range and region.
+
+    region="europe" (or empty) keeps every row; any other value is treated as a
+    country name and keeps only rows whose countries list contains it.
+    """
+    df = df.filter((pl.col("acq_date") >= start) & (pl.col("acq_date") <= end))
+    if region and region.lower() != "europe":
+        df = df.filter(pl.col("countries").list.contains(region))
+    return df
+
+
+def _csv_frame(df: pl.DataFrame) -> pl.DataFrame:
+    """Flatten list columns (satellites, countries, ...) so the frame can be written as CSV"""
+    return df.with_columns(pl.col(pl.List(pl.String)).list.join(",").cast(pl.String))
+
+
+# Frontend of the app
 @app.route("/")
 def index():
     return send_from_directory(str(ROOT_DIR / "web"), "index.html")
+
 
 # Website health
 @app.route("/health")
@@ -49,99 +80,117 @@ def health():
     return jsonify({"status": "ok"})
 
 
-# Calendar 
-@app.route("/api/calendar")
-def calendar():
-    """Visualise the dataset in a calendar by year and month
+# Dataset bounds for the frontend date pickers
+@app.route("/api/meta")
+def meta():
+    """Date range, row count and satellite coverage markers of the dataset
 
     Returns:
-        _type_: Input by year and date
+        _type_: JSON with min_date / max_date / rows / markers
     """
-    start = request.args.get("start", "2001-01-01")
-    end = request.args.get("end", "2025-12-30")
-
-    df = _df[(_df["acq_date"] >= start) & (_df["acq_date"] <= end)].copy()
-    df["year"] = df["acq_date"].dt.year
-    df["month"] = df["acq_date"].dt.month
-    cal = df.groupby(["year", "month"])["harmonized_count"].sum().reset_index()
-
-    cy, cm = int(end[:4]), int(end[5:7])
-    sm = cal[cal["month"] == cm]
-    med = float(sm["harmonized_count"].median()) if len(sm) else 0.0
-    cur = cal[(cal["year"] == cy) & (cal["month"] == cm)]
-    cv = float(cur["harmonized_count"].values[0]) if len(cur) else 0.0
-
     return jsonify({
-        "calendar": cal.to_dict(orient="records"),
-        "anomaly": {"current": cv, "median": med, "ratio": cv / med if med > 0 else 0},
-        "total": int(df["harmonized_count"].sum()),
+        "min_date": MIN_DATE.isoformat(),
+        "max_date": MAX_DATE.isoformat(),
+        "rows": _df.height,
+        "markers": MARKERS,
     })
 
 
+# Country selector list
+@app.route("/api/countries")
+def countries():
+    """List the countries present in the dataset for the region selector
 
+    Returns:
+        _type_: Sorted list of country names
+    """
+    return jsonify({"countries": sorted(_df["countries"].explode().unique().to_list())})
+
+
+# Calendar: hotspot count per day of one month
+@app.route("/api/calendar")
+def calendar():
+    """Hotspot count per day for a given year/month (drives the side calendar)
+
+    Returns:
+        _type_: JSON with year, month, days=[{day, count}], total, max
+    """
+    year = int(request.args.get("year", MAX_DATE.year))
+    month = int(request.args.get("month", MAX_DATE.month))
+    df = _df.filter(
+        (pl.col("acq_date").dt.year() == year)
+        & (pl.col("acq_date").dt.month() == month)
+    )
+    cal = (
+        df.group_by(pl.col("acq_date").dt.day().alias("day"))
+        .agg(pl.len().alias("count"))
+        .sort("day")
+    )
+    return jsonify({
+        "year": year,
+        "month": month,
+        "days": cal.to_dicts(),
+        "total": int(cal["count"].sum()) if cal.height else 0,
+        "max": int(cal["count"].max()) if cal.height else 0,
+    })
+
+
+# Map: all hotspots of a single day as compact columnar JSON
+@app.route("/api/hotspots")
+def hotspots():
+    """All hotspots for one day (?date=YYYY-MM-DD) for the map.
+
+    brightness is coalesced across MODIS (brightness) and VIIRS (bright_ti4/ti5).
+
+    Returns:
+        _type_: JSON with date, count and columnar arrays lat/lon/brightness/frp/...
+    """
+    d = date.fromisoformat(request.args.get("date", MAX_DATE.isoformat()))
+    df = _df.filter(pl.col("acq_date") == d)
+    df = df.with_columns(
+        pl.coalesce(
+            [pl.col("brightness"), pl.col("bright_ti4"), pl.col("bright_ti5")]
+        ).alias("brightness")
+    )
+    return jsonify({
+        "date": d.isoformat(),
+        "count": df.height,
+        "lat": df["latitude"].round(4).to_list(),
+        "lon": df["longitude"].round(4).to_list(),
+        "brightness": df["brightness"].round(1).to_list(),
+        "frp": df["frp"].round(1).to_list(),
+        "satellites": df["satellites"].to_list(),
+        "confidence": df["confidence_ordinal"].to_list(),
+        "daynight": df["daynight"].to_list(),
+        "countries": df["countries"].to_list(),
+    })
+
+
+# Export: scientist downloads the hotspots of a date range + region as CSV
 @app.route("/api/export")
 def export():
-    """Export the data in CSV
- format 
+    """Export hotspots as CSV for ?start / ?end / ?region.
+
+    region=europe exports all of Europe; any other value is a country name.
+    The polars frame is filtered by date range and region before writing.
+
     Returns:
-        _type_: _description_
+        _type_: CSV file download
     """
-    start = request.args.get("start", "2001-01-01")
-    end = request.args.get("end", "2025-12-30")
-    df = _df[(_df["acq_date"] >= start) & (_df["acq_date"] <= end)]
+    start = date.fromisoformat(request.args.get("start", MIN_DATE.isoformat()))
+    end = date.fromisoformat(request.args.get("end", MAX_DATE.isoformat()))
+    region = request.args.get("region", "europe")
+    df = _csv_frame(_filter_range(_df, start, end, region))
     buf = io.StringIO()
-    df.to_csv(buf, index=False)
-    buf.seek(0)
+    df.write_csv(buf)
+    filename = f"hotspots_{region.lower()}_{start.isoformat()}_{end.isoformat()}.csv"
     return Response(
         buf.getvalue(),
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=austria_fires.csv"},
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-
-
-@app.route("/api/ingest", methods=["POST"])
-def ingest():
-    """_summary_
-
-    Returns:
-        _type_: _description_
-    """
-    global _df
-    f = request.files.get("file")
-    if not f:
-        return jsonify({"error": "no file"}), 400
-    path = DATA_DIR / secure_filename(f.filename)
-    f.save(path)
-    if path.suffix == ".parquet":
-        new = pd.read_parquet(path)
-    else:
-        new = pd.read_csv(path, parse_dates=["acq_date"])
-    for col in ("acq_date", "instrument"):
-        if col not in new.columns:
-            return jsonify({"error": f"missing column: {col}"}), 400
-    new.to_parquet(DATA_FILE, index=False)
-    _df = _load()
-    return jsonify({"rows": len(_df), "status": "ok"})
-
-
-# ── OUTPUT: scientist downloads the harmonized dataset ───────────────────
-@app.route("/api/data")
-def data_out():
-    fmt = request.args.get("format", "csv")
-    if fmt == "parquet":
-        buf = io.BytesIO()
-        _df.to_parquet(buf, index=False)
-        buf.seek(0)
-        return Response(buf.getvalue(), mimetype="application/octet-stream",
-                        headers={"Content-Disposition": "attachment; filename=harmonized.parquet"})
-    else:
-        buf = io.StringIO()
-        _df.to_csv(buf, index=False)
-        buf.seek(0)
-        return Response(buf.getvalue(), mimetype="text/csv",
-                        headers={"Content-Disposition": "attachment; filename=harmonized.csv"})
 
 
 # Load webpage
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)   
+    app.run(debug=True, port=5000)

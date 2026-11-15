@@ -1,135 +1,315 @@
 <!DOCTYPE html>
-<html>
- <head>
-  <title>
-   Calendar
-  </title>
-  <style>
-   body{font-family:system-ui;margin:0;padding:1.5rem;background:#111;color:#eee}
-        h1{font-size:1.4rem}
-        .controls{display:flex;gap:.5rem;margin:1rem 0;align-items:center}
-        .controls input{padding:.3rem;border-radius:4px;border:1px solid #444;background:#222;color:#fff}
-        .controls button{padding:.3rem .8rem;border-radius:4px;background:#e94560;color:#fff;border:none;cursor:pointer}
-        #anomaly{font-size:1rem;padding:.3rem .7rem;border-radius:5px;display:inline-block;margin:.5rem 0}
-        .above{background:#7c2d12}.below{background:#14532d}.normal{background:#1e3a5f}
-        table{border-collapse:collapse;margin-top:1rem}
-        th,td{padding:.3rem .5rem;text-align:center;border:1px solid #333;font-size:.85rem}
-        th{background:#222}
-        #total{color:#aaa;margin:.5rem 0}
-        a{color:#7dd3fc}
-  </style>
- </head>
- <body>
-  <h1>
-   Calendar
-  </h1>
-  <p style="color:#888">
-    Harmonized MODIS + VIIRS (NASA FIRMS)
-  </p>
-  <!-- Scientist panel -->
-  <details style="margin-bottom:1rem;border:1px solid #333;border-radius:6px;padding:.5rem">
-    <summary style="cursor:pointer;color:#888">⚙ Data Ingest / Export</summary>
-    <div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center;flex-wrap:wrap">
-      <input type="file" id="file" accept=".parquet,.csv"/>
-      <button onclick="ingest()" style="padding:.3rem .8rem;border-radius:4px;background:#333;color:#fff;border:none;cursor:pointer">Upload</button>
-      <a href="/api/data?format=csv" style="color:#7dd3fc">⬇ CSV</a>
-      <a href="/api/data?format=parquet" style="color:#7dd3fc">⬇ Parquet</a>
-      <span id="ingestMsg" style="color:#888;font-size:.85rem"></span>
+<!-- Created using Mistral Vibe -->
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Moonpies · FIRMS Fire Hotspots — Europe</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#131826; --panel2:#1a2133; --line:#263049;
+    --text:#e8ecf4; --muted:#8b94ab; --accent:#ff6d3a; --accent2:#ffb03a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  header{
+    display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap;
+    padding:.7rem 1.2rem; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  header h1{font-size:1.15rem; margin:0; letter-spacing:.3px}
+  header h1 .flame{color:var(--accent)}
+  header p{margin:0; color:var(--muted); font-size:.8rem}
+  main{flex:1; display:flex; min-height:0}
+  #map-wrap{flex:1; position:relative; min-width:0}
+  #map{position:absolute; inset:0; background:#aad3df}
+  #map-controls{
+    position:absolute; top:.8rem; left:.8rem; z-index:1000;
+    display:flex; align-items:center; gap:.45rem; flex-wrap:wrap;
+    background:rgba(19,24,38,.92); border:1px solid var(--line);
+    border-radius:10px; padding:.5rem .6rem; backdrop-filter:blur(4px);
+    box-shadow:0 4px 18px rgba(0,0,0,.45);
+  }
+  #map-controls input[type=date]{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:6px; padding:.32rem .5rem; font-size:.85rem; color-scheme:dark;
+  }
+  .btn{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:6px; padding:.32rem .6rem; font-size:.85rem; cursor:pointer;
+  }
+  .btn:hover{border-color:var(--accent); color:var(--accent2)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#1a0d05; font-weight:600}
+  .btn.primary:hover{background:var(--accent2); color:#1a0d05}
+  #day-count{
+    font-size:.8rem; color:var(--muted); padding:.1rem .4rem;
+    border-left:1px solid var(--line);
+  }
+  #day-count b{color:var(--accent2)}
+  #legend{
+    position:absolute; right:.8rem; bottom:.8rem; z-index:1000;
+    background:rgba(19,24,38,.92); border:1px solid var(--line); border-radius:10px;
+    padding:.55rem .7rem; font-size:.72rem; color:var(--muted); line-height:1.5;
+  }
+  #legend .bar{
+    width:130px; height:9px; border-radius:4px; margin:.25rem 0 .15rem;
+    background:linear-gradient(90deg,#ffd54f,#ff9800,#f44336,#b71c1c);
+  }
+  aside{
+    width:340px; flex-shrink:0; overflow-y:auto; border-left:1px solid var(--line);
+    background:var(--panel); padding:.9rem; display:flex; flex-direction:column; gap:.9rem;
+  }
+  .card{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:.85rem .9rem}
+  .card h2{font-size:.85rem; margin:0 0 .6rem; text-transform:uppercase; letter-spacing:.8px; color:var(--muted)}
+  /* calendar */
+  #cal-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:.55rem}
+  #cal-title{font-weight:600; font-size:.95rem}
+  #cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px}
+  #cal-grid .dow{text-align:center; font-size:.68rem; color:var(--muted); padding:.15rem 0}
+  #cal-grid .day{
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius:6px; font-size:.72rem; cursor:pointer; border:1px solid transparent;
+    background:#10151f; color:var(--muted); line-height:1.1; user-select:none;
+  }
+  #cal-grid .day .n{font-size:.62rem; opacity:.85}
+  #cal-grid .day.empty{background:transparent; cursor:default}
+  #cal-grid .day:not(.empty):hover{border-color:var(--accent2)}
+  #cal-grid .day.selected{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; color:#fff}
+  #cal-total{font-size:.75rem; color:var(--muted); margin-top:.55rem}
+  #cal-total b{color:var(--accent2)}
+  /* export */
+  .field{display:flex; flex-direction:column; gap:.25rem; margin-bottom:.55rem}
+  .field label{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px}
+  .field input,.field select{
+    background:var(--bg); color:var(--text); border:1px solid var(--line);
+    border-radius:6px; padding:.4rem .5rem; font-size:.85rem; color-scheme:dark;
+  }
+  #export-msg{font-size:.75rem; color:var(--muted); margin-top:.4rem; min-height:1em}
+  .leaflet-popup-content-wrapper{background:var(--panel); color:var(--text); border:1px solid var(--line)}
+  .leaflet-popup-tip{background:var(--panel)}
+  .leaflet-popup-content{font-size:.8rem; line-height:1.45; margin:.55rem .7rem}
+  .leaflet-popup-content b{color:var(--accent2)}
+  .leaflet-container{font-family:inherit}
+  .marker-cluster{background:rgba(255,109,58,.25); border:1px solid rgba(255,109,58,.6)}
+  .marker-cluster div{background:rgba(255,109,58,.75); color:#1a0d05; font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="flame">&#9679;</span> Moonpies · Fire Hotspots Europe</h1>
+  <p id="meta-line">Harmonized NASA FIRMS MODIS + VIIRS hotspots — loading…</p>
+</header>
+<main>
+  <section id="map-wrap">
+    <div id="map"></div>
+    <div id="map-controls">
+      <button class="btn" id="prev-day" title="Previous day">&#9664;</button>
+      <input type="date" id="date-input"/>
+      <button class="btn" id="next-day" title="Next day">&#9654;</button>
+      <span id="day-count">—</span>
     </div>
-  </details>   
-  <div class="controls">
-   <label>
-    From
-    <input id="start" type="date" value="2001-01-01"/>
-   </label>
-   <label>
-    To
-    <input id="end" type="date" value="2025-12-30"/>
-   </label>
-   <button onclick="load()">
-    Search
-   </button>
-   <a download="" id="csv" style="display:none">
-    ⬇ CSV
-   </a>
-  </div>
-  <div class="normal" id="anomaly">
-   Loading…
-  </div>
-  <div id="total">
-  </div>
-  <div id="calendar">
-  </div>
-  <script>
-   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    <div id="legend">
+      FRP (MW)
+      <div class="bar"></div>
+      low &rarr; high
+    </div>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>Hotspots per day</h2>
+      <div id="cal-nav">
+        <button class="btn" id="prev-month">&#9664;</button>
+        <span id="cal-title"></span>
+        <button class="btn" id="next-month">&#9654;</button>
+      </div>
+      <div id="cal-grid"></div>
+      <div id="cal-total"></div>
+    </div>
+    <div class="card">
+      <h2>Export CSV</h2>
+      <div class="field">
+        <label for="exp-start">From</label>
+        <input type="date" id="exp-start"/>
+      </div>
+      <div class="field">
+        <label for="exp-end">To</label>
+        <input type="date" id="exp-end"/>
+      </div>
+      <div class="field">
+        <label for="exp-region">Region</label>
+        <select id="exp-region"><option value="europe">Europe (all)</option></select>
+      </div>
+      <button class="btn primary" id="exp-btn" style="width:100%">Download CSV</button>
+      <div id="export-msg"></div>
+    </div>
+  </aside>
+</main>
 
-  async function load(){
-    const s = document.getElementById('start').value;
-    const e = document.getElementById('end').value;
-    const r = await fetch(`/api/calendar?start=${s}&end=${e}`);
-    const d = await r.json();
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 
-    // Adjust colours for accessibility
-    function colorAccessibility(t) {
-      const r = Math.round(253 + t * (178 - 253));
-      const g = Math.round(231 + t * (59 - 231));
-      const b = Math.round(186 + t * (5 - 186));
-      return `rgb(${r},${g},${b})`;
-    }  
+let MIN_DATE, MAX_DATE, currentDate, calYear, calMonth;
+let map, cluster;
 
-    // Anomaly
-    const a = d.anomaly, el = document.getElementById('anomaly');
-    if(a.ratio > 1.2){ el.className='above'; el.textContent=`🔴 ${a.current.toFixed(0)} hotspots — ${(a.ratio*100).toFixed(0)}% of median`; }
-    else if(a.ratio < 0.8){ el.className='below'; el.textContent=`🟢 ${a.current.toFixed(0)} hotspots — below median`; }
-    else{ el.className='normal'; el.textContent=`⚪ ${a.current.toFixed(0)} hotspots — near median`; }
+const $ = id => document.getElementById(id);
 
-    document.getElementById('total').textContent = `Total: ${d.total.toLocaleString()} hotspots`;
+function iso(d){ return d.toISOString().slice(0,10); }
+function parseIso(s){ const [y,m,dd] = s.split('-').map(Number); return new Date(Date.UTC(y, m-1, dd)); }
+function clampDate(d){ return new Date(Math.min(MAX_DATE, Math.max(MIN_DATE, d))); }
 
-    // Build table
-    const cal = d.calendar;
-    const years = [...new Set(cal.map(x=>x.year))].sort();
-    const max = Math.max(...cal.map(x=>x.harmonized_count), 1);
+function frpColor(frp){
+  if (frp < 10)  return '#ffd54f';
+  if (frp < 50)  return '#ff9800';
+  if (frp < 200) return '#f44336';
+  return '#b71c1c';
+}
+function frpRadius(frp){
+  return 3 + 7 * Math.min(1, Math.sqrt(Math.max(frp,0)) / Math.sqrt(500));
+}
 
-    let html = '<table><tr><th>Year</th>';
-    MONTHS.forEach(m => html += `<th>${m}</th>`);
-    html += '</tr>';
+async function init(){
+  const meta = await (await fetch('/api/meta')).json();
+  MIN_DATE = parseIso(meta.min_date);
+  MAX_DATE = parseIso(meta.max_date);
+  $('meta-line').textContent =
+    `Harmonized NASA FIRMS MODIS + VIIRS hotspots · ${meta.min_date} → ${meta.max_date} · ${meta.rows.toLocaleString()} detections` +
+    (meta.markers.viirs_start ? ` · VIIRS from ${meta.markers.viirs_start}` : '') +
+    (meta.markers.modis_end ? ` · MODIS until ${meta.markers.modis_end}` : '');
 
-    years.forEach(yr => {
-      html += `<tr><td><b>${yr}</b></td>`;
-      for(let m=1;m<=12;m++){
-        const item = cal.find(x=>x.year===yr && x.month===m);
-        const v = item ? item.harmonized_count : 0;
-        const intensity = v / max;
+  const di = $('date-input');
+  di.min = meta.min_date; di.max = meta.max_date;
+  $('exp-start').min = meta.min_date; $('exp-start').max = meta.max_date;
+  $('exp-end').min = meta.min_date; $('exp-end').max = meta.max_date;
+  $('exp-start').value = meta.min_date;
+  $('exp-end').value = meta.max_date;
 
-        const bg = v === 0 ? '#1a1a2e' : colorAccessibility(intensity);
-        const textColor = intensity > 0.5 ? '#fff' : '#000';
-        html += `<td style="background:${bg};color:${textColor}">${v.toFixed(0)}</td>`;   
-      }
+  const countries = await (await fetch('/api/countries')).json();
+  const sel = $('exp-region');
+  for (const c of countries.countries){
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c.replaceAll('_',' ');
+    sel.appendChild(o);
+  }
+
+  map = L.map('map', {center:[48.5, 11], zoom:4, minZoom:3, worldCopyJump:true});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  cluster = L.markerClusterGroup({chunkedLoading:true, disableClusteringAtZoom:10, maxClusterRadius:60});
+  map.addLayer(cluster);
+
+  currentDate = MAX_DATE;
+  calYear = MAX_DATE.getUTCFullYear(); calMonth = MAX_DATE.getUTCMonth()+1;
+  di.value = iso(currentDate);
+
+  di.addEventListener('change', () => { if (di.value) setDate(parseIso(di.value)); });
+  $('prev-day').onclick = () => setDate(new Date(currentDate.getTime() - 86400000));
+  $('next-day').onclick = () => setDate(new Date(currentDate.getTime() + 86400000));
+  $('prev-month').onclick = () => shiftMonth(-1);
+  $('next-month').onclick = () => shiftMonth(1);
+  $('exp-btn').onclick = doExport;
+
+  await loadCalendar();
+  await loadHotspots();
+}
+
+function setDate(d){
+  currentDate = clampDate(d);
+  $('date-input').value = iso(currentDate);
+  const y = currentDate.getUTCFullYear(), m = currentDate.getUTCMonth()+1;
+  if (y !== calYear || m !== calMonth){ calYear = y; calMonth = m; }
+  loadCalendar();
+  loadHotspots();
+}
+
+function shiftMonth(delta){
+  let y = calYear, m = calMonth + delta;
+  if (m < 1){ m = 12; y--; } if (m > 12){ m = 1; y++; }
+  const first = new Date(Date.UTC(y, m-1, 1));
+  if (first < new Date(Date.UTC(MIN_DATE.getUTCFullYear(), MIN_DATE.getUTCMonth(), 1))) return;
+  if (first > new Date(Date.UTC(MAX_DATE.getUTCFullYear(), MAX_DATE.getUTCMonth(), 1))) return;
+  calYear = y; calMonth = m;
+  loadCalendar();
+}
+
+async function loadCalendar(){
+  const d = await (await fetch(`/api/calendar?year=${calYear}&month=${calMonth}`)).json();
+  $('cal-title').textContent = `${MONTHS[d.month-1]} ${d.year}`;
+  const counts = {};
+  for (const x of d.days) counts[x.day] = x.count;
+  const max = Math.max(d.max, 1);
+  const daysInMonth = new Date(Date.UTC(d.year, d.month, 0)).getUTCDate();
+  const offset = (new Date(Date.UTC(d.year, d.month-1, 1)).getUTCDay() + 6) % 7; // Monday-first
+  const sel = iso(currentDate);
+  let html = DOW.map(w => `<div class="dow">${w}</div>`).join('');
+  for (let i = 0; i < offset; i++) html += '<div class="day empty"></div>';
+  for (let day = 1; day <= daysInMonth; day++){
+    const c = counts[day] || 0;
+    const dateStr = `${d.year}-${String(d.month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const t = c / max;
+    const bg = c === 0 ? '' : `background:rgba(255,109,58,${(0.10 + 0.85*t).toFixed(2)});color:${t > 0.55 ? '#1a0d05' : 'var(--text)'}`;
+    html += `<div class="day ${dateStr === sel ? 'selected' : ''}" style="${bg}" data-date="${dateStr}" title="${c.toLocaleString()} hotspots">${day}<span class="n">${c ? c.toLocaleString() : ''}</span></div>`;
+  }
+  const grid = $('cal-grid');
+  grid.innerHTML = html;
+  grid.querySelectorAll('.day:not(.empty)').forEach(el => {
+    el.onclick = () => setDate(parseIso(el.dataset.date));
+  });
+  $('cal-total').innerHTML = `Total this month: <b>${d.total.toLocaleString()}</b> hotspots · busiest day: <b>${d.max.toLocaleString()}</b>`;
+}
+
+async function loadHotspots(){
+  const dateStr = iso(currentDate);
+  const d = await (await fetch(`/api/hotspots?date=${dateStr}`)).json();
+  cluster.clearLayers();
+  const markers = [];
+  for (let i = 0; i < d.count; i++){
+    const frp = d.frp[i];
+    const m = L.circleMarker([d.lat[i], d.lon[i]], {
+      radius: frpRadius(frp), color: frpColor(frp), weight: 1,
+      fillColor: frpColor(frp), fillOpacity: 0.75
     });
-    html += '</table>';
-
-    document.getElementById('calendar').innerHTML = html;
-
-    // CSV
-    const link = document.getElementById('csv');
-    link.href = `/api/export?start=${s}&end=${e}`;
-    link.style.display = 'inline';
+    m.bindPopup(
+      `<b>Hotspot · ${d.date}</b><br>` +
+      `${d.lat[i].toFixed(4)}°N, ${d.lon[i].toFixed(4)}°E<br>` +
+      `Brightness: <b>${d.brightness[i] === null ? '—' : d.brightness[i].toFixed(1) + ' K'}</b><br>` +
+      `FRP: <b>${frp.toFixed(1)} MW</b><br>` +
+      `Satellite: ${(d.satellites[i] || []).join(', ')}<br>` +
+      `Confidence: ${d.confidence[i]} · ${(d.daynight[i] || []).join(', ')}<br>` +
+      `Country: ${(d.countries[i] || []).map(c => c.replaceAll('_',' ')).join(', ')}`
+    );
+    markers.push(m);
   }
+  cluster.addLayers(markers);
+  $('day-count').innerHTML = `<b>${d.count.toLocaleString()}</b> hotspots on ${d.date}`;
+}
 
-  // Inges data
-  async function ingest(){
-    const f = document.getElementById('file').files[0];
-    if(!f) 
-      return;
-    const fd = new FormData();
-    fd.append('file', f);
-    const r = await fetch('/api/ingest', {method:'POST', body:fd});
-    const d = await r.json();
-    document.getElementById('ingestMsg').textContent =
-      d.status==='ok' ? `${d.rows.toLocaleString()} rows loaded` : d.error;
-    if(d.status==='ok') load();
-  }
-  load();
-  </script>
- </body>
+function doExport(){
+  const s = $('exp-start').value, e = $('exp-end').value, r = $('exp-region').value;
+  const msg = $('export-msg');
+  if (!s || !e){ msg.textContent = 'Pick a start and end date.'; return; }
+  if (s > e){ msg.textContent = 'Start must be before end.'; return; }
+  msg.textContent = 'Exporting…';
+  const a = document.createElement('a');
+  a.href = `/api/export?start=${s}&end=${e}&region=${encodeURIComponent(r)}`;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  msg.textContent = `CSV: ${s} → ${e} · ${r === 'europe' ? 'Europe' : r.replaceAll('_',' ')}`;
+}
+
+init();
+</script>
+</body>
 </html>
