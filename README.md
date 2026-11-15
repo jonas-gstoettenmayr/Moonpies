@@ -1,6 +1,8 @@
-# Moonpies
+# NASA SPACE APPS 2026 Challenge
+## Topic: Harmonization of MODIS and VIIRS Hot Spots
 
-## Overview
+### Overview
+
 
 Repository of the Moonpies team for the 2026 NASA space apps challenge.
 
@@ -110,6 +112,8 @@ This creates:
 
 ## Architecture and Design
 
+
+
 ### Meteomatics Data
 
 For detailed information on available weather parameters, API usage, and data fetching options, see:
@@ -169,17 +173,37 @@ Moonpies/
 ```
 
 ### References
-All references used in this Hackathon can be found in [References](/docs/ REFERENCES.md)
+All references used in this Hackathon can be found below
+
+All references used in this Hackathon can be found below
+
+| # | Author(s) | Year | Title | Source | DOI / URL |
+|---|-----------|------|-------|--------|-----------|
+| 1 | | | | | |
+| 2 | | | | | |
+| 3 | | | | | |
 
 ### Glossary
-All abbreviations and terms used in this Hackathon can be found in [Glossary](/docs/GLOSSARY.md)
+
+The abbreviations used in this challenge is  
+
+| Abbreviations | Description | Reference |
+| --- | --- | --- |
+
+| FRIMS | Fire Information for Resource Management System  |[https://firms.modaps.eosdis.nasa.gov/](https://firms.modaps.eosdis.nasa.gov/) |
+| MODIS | Moderate Resolution Imaging Spectroradiometer | [https://terra.nasa.gov/about/terra-instruments/modis](https://terra.nasa.gov/about/terra-instruments/modis) |
+| LANCE | Land, Atmosphere Near real-time Capability for Earth observation | [https://www.earthdata.nasa.gov/data/projects/lance](https://www.earthdata.nasa.gov/data/projects/lance)  |
+| VIIRS | Moderate Resolution Imaging Spectroradiometer | [https://terra.nasa.gov/about/terra-instruments/modis](https://terra.nasa.gov/about/terra-instruments/modis) |
+| ESN | Echo State Networks | |
+| RC | Echo State Networks | |
+| QML | Quantum Machine Learning | |
 
 ### Future Work
 
+This challenge presents various avenues for explorations beyond the constraints of the challenge scope. These were several
+
+
 Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
-
-
-## Contributing
 
 
 ## Resources
