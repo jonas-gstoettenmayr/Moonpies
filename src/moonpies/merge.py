@@ -48,11 +48,14 @@ both sensors in a single DataFrame with one common schema:
    are gridded consistently. This puts both sensors on the *same effective
    resolution*, which is what makes their counts comparable for the
    burning-activity calendar. Detections in the same cell on the same day
-   are merged into ONE row across all sensors, and the new ``satellites``
-   list column records which satellites reported it (a single-element list
-   if only one did). scan*track (the actual pixel area in km^2, which grows
-   toward the swath edge) is used to add ``frp_density`` = MW per km^2 of
-   detected pixel. Cell centers are returned both as x/y meters and as
+   are merged into ONE row across all sensors. List columns record the
+   reporters/variants: ``satellites``, ``versions``, ``daynight`` (sorted
+   unique lists, single-element if only one value) and ``countries`` (if the
+   input has a ``country`` column); ``confidence_ordinal`` is the max
+   ordinal (l=0, n=1, h=2); the four brightness columns are averaged over
+   non-nulls. scan*track (the actual pixel area in km^2, which grows toward
+   the swath edge) is used to add ``frp_density`` = MW per km^2 of detected
+   pixel. Cell centers are returned both as x/y meters and as
    latitude/longitude (transformed back to EPSG:4326).
 """
 
@@ -153,8 +156,10 @@ def _normalize(
     # version is a collection label, not a comparable number ("6.03" vs "2")
     df = df.with_columns(pl.col("version").cast(pl.String))
 
-    # Step 4: project onto the common column order -> identical schemas.
-    return df.select(COMMON_COLUMNS)
+    # Step 4: project onto the common column order, keeping any extra columns
+    # the caller added (e.g. country) so they survive the union and the grid.
+    extras = [c for c in df.columns if c not in COMMON_COLUMNS]
+    return df.select(COMMON_COLUMNS + extras)
 
 
 def _to_grid(df: pl.DataFrame, grid_res: float, crs: str) -> pl.DataFrame:
@@ -168,12 +173,16 @@ def _to_grid(df: pl.DataFrame, grid_res: float, crs: str) -> pl.DataFrame:
     edge) adds frp_density = MW per km^2 of detected pixel.
 
     Grouping is per (acq_date, cell) across ALL sensors: detections near each
-    other on the same day merge into one row, and the ``satellites`` list
-    column records which satellites reported it (single-element list if only
-    one did). FRP is summed and the raw count is kept as n_detections. Cell
-    centers are returned as x/y meters and as latitude/longitude
-    (transformed back to EPSG:4326).
+    other on the same day merge into one row. List columns record the reporters
+    and variants: ``satellites``, ``versions``, ``daynight`` (sorted unique
+    lists; single-element if only one value) and ``countries`` (only if the
+    input has a ``country`` column). ``confidence_ordinal`` is the max
+    ordinal in the group (l=0, n=1, h=2). Brightness columns are averaged
+    over the non-null values (each sensor's own column). FRP is summed and the
+    raw count is kept as n_detections. Cell centers are returned as x/y
+    meters and as latitude/longitude (transformed back to EPSG:4326).
     """
+    # df = df.filter(df["type"] == 0)
     fwd = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
     inv = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
 
@@ -184,35 +193,61 @@ def _to_grid(df: pl.DataFrame, grid_res: float, crs: str) -> pl.DataFrame:
         pl.Series("y", y),
         # actual pixel area in km^2 (scan/track grow toward the swath edge)
         pixel_area=pl.col("scan") * pl.col("track"),
+        # ordinal confidence: l=0, n=1, h=2 (max wins within the group)
+        conf_ord=pl.when(pl.col("confidence") == "h")
+        .then(2)
+        .when(pl.col("confidence") == "n")
+        .then(1)
+        .otherwise(0),
     ).with_columns(
         x_cell=(pl.col("x") / grid_res).round(0).cast(pl.Int64),
         y_cell=(pl.col("y") / grid_res).round(0).cast(pl.Int64),
     )
+    aggs: dict[str, pl.Expr] = {
+        "x": pl.col("x_cell").first() * grid_res,
+        "y": pl.col("y_cell").first() * grid_res,
+        # all satellites/versions/day-night flags that reported this cell-day
+        "satellites": pl.col("satellite").unique(),
+        "versions": pl.col("version").unique(),
+        "daynight": pl.col("daynight").unique(),
+        "confidence_ordinal": pl.col("conf_ord").max(),
+        # brightness temperatures: mean over the non-null values per sensor column
+        "brightness": pl.col("brightness").mean(),
+        "bright_t31": pl.col("bright_t31").mean(),
+        "bright_ti4": pl.col("bright_ti4").mean(),
+        "bright_ti5": pl.col("bright_ti5").mean(),
+        "frp": pl.col("frp").sum(),
+        "frp_density": (pl.col("frp") / pl.col("pixel_area")).sum(),
+        "pixel_area": pl.col("pixel_area").sum(),
+        "n_detections": pl.len(),
+    }
+    if "country" in df.columns:
+        aggs["countries"] = pl.col("country").unique()
     g = (
         df.group_by(["acq_date", "x_cell", "y_cell"])
-        .agg(
-            x=pl.col("x_cell").first() * grid_res,
-            y=pl.col("y_cell").first() * grid_res,
-            # all satellites that reported a detection in this cell-day
-            satellites=pl.col("satellite").unique(),
-            frp=pl.col("frp").sum(),
-            frp_density=(pl.col("frp") / pl.col("pixel_area")).sum(),
-            pixel_area=pl.col("pixel_area").sum(),
-            n_detections=pl.len(),
-        )
+        .agg(**aggs)
         .drop("x_cell", "y_cell")
-        .with_columns(pl.col("satellites").list.sort())
+        .with_columns(
+            pl.col("satellites").list.sort(),
+            pl.col("versions").list.sort(),
+            pl.col("daynight").list.sort(),
+        )
     )
+    if "countries" in g.columns:
+        g = g.with_columns(pl.col("countries").list.sort())
     # cell centers back to lon/lat for display on web maps
     lon, lat = inv.transform(g["x"].to_list(), g["y"].to_list())
-    return g.with_columns(
-        pl.Series("latitude", lat), pl.Series("longitude", lon)
-    ).select(
+    g = g.with_columns(pl.Series("latitude", lat), pl.Series("longitude", lon))
+    out_cols = [
         "acq_date",
         "latitude", "longitude", "x", "y",
-        "satellites",
+        "satellites", "versions", "daynight", "confidence_ordinal",
+        "brightness", "bright_t31", "bright_ti4", "bright_ti5",
         "frp", "frp_density", "pixel_area", "n_detections",
-    )
+    ]
+    if "countries" in g.columns:
+        out_cols.append("countries")
+    return g.select(out_cols)
 
 
 def _detect_is_modis(df: pl.DataFrame) -> bool:
@@ -299,6 +334,21 @@ def harmonize(
         )
 
     # Step 5: vertical concat = union, one row per detection, no row matching.
+    # Align schemas first: an extra column present in only one frame (e.g.
+    # country on one country's file) becomes a typed null column in the other.
+    all_cols: list[str] = []
+    dtypes: dict[str, pl.DataType] = {}
+    for f in frames:
+        for c in f.columns:
+            if c not in all_cols:
+                all_cols.append(c)
+            dtypes.setdefault(c, f.schema[c])
+    frames = [
+        f.with_columns(
+            [pl.lit(None).cast(dtypes[c]).alias(c) for c in all_cols if c not in f.columns]
+        ).select(all_cols)
+        for f in frames
+    ]
     merged = pl.concat(frames, how="vertical")
 
     # Optional type filter (e.g. types=[0] keeps only vegetation fires).
@@ -323,10 +373,18 @@ if __name__ == "__main__":
     # satellites, then merge with MODIS - raw union first, then on a 1 km
     # grid in EPSG:3035 (LAEA Europe). Add more country/year CSVs to the
     # globs the same way.
-    modis = pl.concat([pl.read_csv(p) for p in sorted((DATA_DIR / "modis").glob("*.csv"))])
+    def read_with_country(paths) -> pl.DataFrame:
+        # tag each file with its country (last part of the file name)
+        return pl.concat(
+            [pl.read_csv(p).with_columns(pl.lit(p.stem.split("_")[-1]).alias("country")) for p in paths]
+        )
+
+    modis = read_with_country(sorted((DATA_DIR / "modis").glob("*.csv")))
     viirs = pl.concat(
-        [pl.read_csv(p) for p in sorted((DATA_DIR / "viirs").glob("*.csv"))]
-        + [pl.read_csv(p) for p in sorted((DATA_DIR / "viirs-snpp").glob("*.csv"))]
+        [
+            read_with_country(sorted((DATA_DIR / "viirs").glob("*.csv"))),
+            read_with_country(sorted((DATA_DIR / "viirs-snpp").glob("*.csv"))),
+        ]
     )
 
     merged = harmonize(modis, viirs)

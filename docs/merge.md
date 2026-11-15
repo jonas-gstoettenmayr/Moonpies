@@ -94,13 +94,25 @@ y_cell = round(y / grid_res)
 ```
 
 All detections sharing `(acq_date, x_cell, y_cell)` — **across all sensors** — collapse
-into one row at the cell center (`x_cell*grid_res`, `y_cell*grid_res`), with `frp` summed
-and `n_detections` counted. The new **`satellites` list column** records which satellites
-reported the cell-day (e.g. `["N", "Terra"]`; a single-element list like `["N"]` if only
-one did). Cell centers are transformed back to EPSG:4326, so the output has both `x`/`y`
-(meters, for equal-area analysis) and `latitude`/`longitude` (degrees, for web maps).
-Grid output columns: `acq_date, latitude, longitude, x, y, satellites, frp,
-frp_density, pixel_area, n_detections`.
+into one row at the cell center (`x_cell*grid_res`, `y_cell*grid_res`). Aggregation per
+column:
+
+| Grid column | Aggregation |
+|---|---|
+| `satellites`, `versions`, `daynight` | sorted unique **lists** (single-element if only one value) |
+| `countries` | sorted unique list — only if the input has a `country` column (extra columns are preserved through the union) |
+| `confidence_ordinal` | max ordinal in the group (l=0, n=1, h=2) |
+| `brightness`, `bright_t31`, `bright_ti4`, `bright_ti5` | mean over non-null values (each sensor's own column) |
+| `frp` | sum (total MW of the cell-day) |
+| `frp_density` | `sum(frp / (scan*track))` — MW per km² of detected pixel |
+| `pixel_area` | `sum(scan*track)` — detected km² |
+| `n_detections` | count |
+
+Cell centers are transformed back to EPSG:4326, so the output has both `x`/`y` (meters,
+for equal-area analysis) and `latitude`/`longitude` (degrees, for web maps). Grid output
+columns: `acq_date, latitude, longitude, x, y, satellites, versions, daynight,
+confidence_ordinal, brightness, bright_t31, bright_ti4, bright_ti5, frp, frp_density,
+pixel_area, n_detections, countries`.
 
 Because cells are square in meters in an equal-area CRS, **no latitude correction is
 needed** — files from different countries and years (concatenated by the caller with
@@ -163,12 +175,15 @@ no numpy dependency), then the same divide–round–group logic applies in mete
   projection checks — (lat 52, lon 10) projects to exactly x=4321000, y=3210000 (the
   EPSG:3035 center) and back; two points ~343 m apart share a 1 km cell while one ~686 m
   away does not; cross-satellite clustering — a cell with Terra + 2×N detections becomes
-  ONE row with `satellites=["N", "Terra"]`, `frp=18.0`, `frp_density=53.25`,
+  ONE row with `satellites=["N", "Terra"]`, `versions=["2", "6.03"]`,
+  `daynight=["D", "N"]`, `countries=["AT"]`, `confidence_ordinal=2`,
+  `brightness=300.0`, `bright_ti4=330.5`, `frp=18.0`, `frp_density=53.25`,
   `pixel_area=1.41`, `n_detections=3`; a single-reporter cell gets `["N"]`. All pass.
-- Real data (Austria + Portugal 2020, concatenated): raw union 14,173 rows
-  (1,817 MODIS + 12,356 VIIRS); single-frame `harmonize(modis)` → 1,817 rows with the
-  identical schema; 1 km EPSG:3035 grid → 5,636 cell-days (cross-satellite merged, with
-  `satellites` lists); `types=[0]` → 3,815 cell-days.
+- Real data (Austria + Portugal 2020, concatenated, tagged with a `country` column):
+  raw union 14,173 rows (country preserved); single-frame `harmonize(modis)` → 1,817
+  rows with the identical schema; 1 km EPSG:3035 grid → 3,815 cell-days (grid mode
+  filters `type==0`, cross-satellite merged, with `satellites`/`versions`/`daynight`/
+  `countries` lists, `confidence_ordinal`, and mean brightness columns).
 - `pytest tests/`: 1 passed, 2 skipped (pre-existing skips).
 
 ## 8. Assumptions & limitations
@@ -182,4 +197,7 @@ no numpy dependency), then the same divide–round–group logic applies in mete
 - Grid mode merges all sensors per (day, cell) into one row with a `satellites` list —
   this intentionally combines MODIS and VIIRS reports of the same fire; if you need
   per-sensor rows instead, group by `satellite` as well.
+- `_to_grid` currently hardcodes `type == 0` (vegetation fires only), so the `types`
+  parameter has no additional effect in grid mode; remove that line if you want
+  `types` to control grid filtering.
 - pyproj transforms run on plain Python lists (no numpy dependency).

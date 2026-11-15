@@ -5,7 +5,7 @@ import polars as pl
 from moonpies.consts import DATA_DIR
 
 
-def fetch_data():
+def fetch_data() -> defaultdict[str, pl.DataFrame]:
     europe = DATA_DIR/"europe"
 
     sensors:defaultdict[str, list] = defaultdict(list)
@@ -33,7 +33,7 @@ def fetch_data():
                 
     for k,v in sensors.items():
         sensors[k] = pl.concat(v)
-    return sensors
+    return sensors#type:ignore
         
 if __name__ == "__main__":
     data = fetch_data()
