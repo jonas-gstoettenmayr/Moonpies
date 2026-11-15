@@ -1,4 +1,0 @@
-# Glossary
-
-| Abbreviations | Description | Reference |
-| --- | --- | --- | 
