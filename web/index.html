@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>
+   Calendar
+  </title>
+  <style>
+   body{font-family:system-ui;margin:0;padding:1.5rem;background:#111;color:#eee}
+        h1{font-size:1.4rem}
+        .controls{display:flex;gap:.5rem;margin:1rem 0;align-items:center}
+        .controls input{padding:.3rem;border-radius:4px;border:1px solid #444;background:#222;color:#fff}
+        .controls button{padding:.3rem .8rem;border-radius:4px;background:#e94560;color:#fff;border:none;cursor:pointer}
+        #anomaly{font-size:1rem;padding:.3rem .7rem;border-radius:5px;display:inline-block;margin:.5rem 0}
+        .above{background:#7c2d12}.below{background:#14532d}.normal{background:#1e3a5f}
+        table{border-collapse:collapse;margin-top:1rem}
+        th,td{padding:.3rem .5rem;text-align:center;border:1px solid #333;font-size:.85rem}
+        th{background:#222}
+        #total{color:#aaa;margin:.5rem 0}
+        a{color:#7dd3fc}
+  </style>
+ </head>
+ <body>
+  <h1>
+   Calendar
+  </h1>
+  <p style="color:#888">
+    Harmonized MODIS + VIIRS (NASA FIRMS)
+  </p>
+  <!-- Scientist panel -->
+  <details style="margin-bottom:1rem;border:1px solid #333;border-radius:6px;padding:.5rem">
+    <summary style="cursor:pointer;color:#888">⚙ Data Ingest / Export</summary>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center;flex-wrap:wrap">
+      <input type="file" id="file" accept=".parquet,.csv"/>
+      <button onclick="ingest()" style="padding:.3rem .8rem;border-radius:4px;background:#333;color:#fff;border:none;cursor:pointer">Upload</button>
+      <a href="/api/data?format=csv" style="color:#7dd3fc">⬇ CSV</a>
+      <a href="/api/data?format=parquet" style="color:#7dd3fc">⬇ Parquet</a>
+      <span id="ingestMsg" style="color:#888;font-size:.85rem"></span>
+    </div>
+  </details>   
+  <div class="controls">
+   <label>
+    From
+    <input id="start" type="date" value="2001-01-01"/>
+   </label>
+   <label>
+    To
+    <input id="end" type="date" value="2025-12-30"/>
+   </label>
+   <button onclick="load()">
+    Search
+   </button>
+   <a download="" id="csv" style="display:none">
+    ⬇ CSV
+   </a>
+  </div>
+  <div class="normal" id="anomaly">
+   Loading…
+  </div>
+  <div id="total">
+  </div>
+  <div id="calendar">
+  </div>
+  <script>
+   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  async function load(){
+    const s = document.getElementById('start').value;
+    const e = document.getElementById('end').value;
+    const r = await fetch(`/api/calendar?start=${s}&end=${e}`);
+    const d = await r.json();
+
+    // Adjust colours for accessibility
+    function colorAccessibility(t) {
+      const r = Math.round(253 + t * (178 - 253));
+      const g = Math.round(231 + t * (59 - 231));
+      const b = Math.round(186 + t * (5 - 186));
+      return `rgb(${r},${g},${b})`;
+    }  
+
+    // Anomaly
+    const a = d.anomaly, el = document.getElementById('anomaly');
+    if(a.ratio > 1.2){ el.className='above'; el.textContent=`🔴 ${a.current.toFixed(0)} hotspots — ${(a.ratio*100).toFixed(0)}% of median`; }
+    else if(a.ratio < 0.8){ el.className='below'; el.textContent=`🟢 ${a.current.toFixed(0)} hotspots — below median`; }
+    else{ el.className='normal'; el.textContent=`⚪ ${a.current.toFixed(0)} hotspots — near median`; }
+
+    document.getElementById('total').textContent = `Total: ${d.total.toLocaleString()} hotspots`;
+
+    // Build table
+    const cal = d.calendar;
+    const years = [...new Set(cal.map(x=>x.year))].sort();
+    const max = Math.max(...cal.map(x=>x.harmonized_count), 1);
+
+    let html = '<table><tr><th>Year</th>';
+    MONTHS.forEach(m => html += `<th>${m}</th>`);
+    html += '</tr>';
+
+    years.forEach(yr => {
+      html += `<tr><td><b>${yr}</b></td>`;
+      for(let m=1;m<=12;m++){
+        const item = cal.find(x=>x.year===yr && x.month===m);
+        const v = item ? item.harmonized_count : 0;
+        const intensity = v / max;
+
+        const bg = v === 0 ? '#1a1a2e' : colorAccessibility(intensity);
+        const textColor = intensity > 0.5 ? '#fff' : '#000';
+        html += `<td style="background:${bg};color:${textColor}">${v.toFixed(0)}</td>`;   
+      }
+    });
+    html += '</table>';
+
+    document.getElementById('calendar').innerHTML = html;
+
+    // CSV
+    const link = document.getElementById('csv');
+    link.href = `/api/export?start=${s}&end=${e}`;
+    link.style.display = 'inline';
+  }
+
+  // Inges data
+  async function ingest(){
+    const f = document.getElementById('file').files[0];
+    if(!f) 
+      return;
+    const fd = new FormData();
+    fd.append('file', f);
+    const r = await fetch('/api/ingest', {method:'POST', body:fd});
+    const d = await r.json();
+    document.getElementById('ingestMsg').textContent =
+      d.status==='ok' ? `${d.rows.toLocaleString()} rows loaded` : d.error;
+    if(d.status==='ok') load();
+  }
+  load();
+  </script>
+ </body>
+</html>
