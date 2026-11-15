@@ -110,15 +110,17 @@ This creates:
 
 ### Architecture and Design
 
-Due to time constraint,
+Due to time constraint, 
 
 #### Super Intelligence 
 
-The following tools were used for the project
+The following SI-tools were used in the scope of this challenge
 
 | Tool | Application | 
 | --- | --- |
-
+| Brave Ask | Refine search results, summarise FAQ documents and code generation for frontend / web development |
+| Mistral Vibe | Code generation, and analysis of Meteometic data |
+| ChatGPT 5.6 | Unpack and analyse MODIS and VIIRS from FRIMS | 
 
 ### Project Structure
 
@@ -190,19 +192,13 @@ For detailed information on available weather parameters, API usage, and data fe
 ### Future Work
 
 This challenge presents various potential avenues beyond the scope and constraints of the challenge. Below are several potential areas for exploration:
-- With URT 
-
-
-Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
-
-### References
-All references used in this Hackathon can be found below
-
-| # | Author(s) | Year | Title | Source | DOI / URL |
-|---|-----------|------|-------|--------|-----------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
+- Integration of URT-dataset from LANCE allows the potential of predicting the nonlinear propagation of the forest fire
+- Integration of the anomolies to further strengthen the probabilistic model of the fire propagation:
+    - Soil-moisture
+    - Weather anomalies due to El-Nino and La-Nina 
+    - Localised precipation
+- Training a echo state networks ( in particular residual computing) hybrid neural network model trained on classical and quantum thermodynamics as well as quantum machine learning to accurately predict the propagation, direction, etc. of forest fires
+- Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
 
 ### Glossary
 
@@ -215,6 +211,3 @@ The abbreviations used in this challenge is
 | MODIS | Moderate Resolution Imaging Spectroradiometer | [https://terra.nasa.gov/about/terra-instruments/modis](https://terra.nasa.gov/about/terra-instruments/modis) |
 | LANCE | Land, Atmosphere Near real-time Capability for Earth observation | [https://www.earthdata.nasa.gov/data/projects/lance](https://www.earthdata.nasa.gov/data/projects/lance)  |
 | VIIRS | Moderate Resolution Imaging Spectroradiometer | [https://terra.nasa.gov/about/terra-instruments/modis](https://terra.nasa.gov/about/terra-instruments/modis) |
-| ESN | Echo State Networks | |
-| RC | Echo State Networks | |
-| QML | Quantum Machine Learning | |
