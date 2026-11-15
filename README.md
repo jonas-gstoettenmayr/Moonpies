@@ -12,6 +12,25 @@ Team members:
 
 ## How It Works
 ## Quick Start
+
+### Prerequisites
+
+- Python ≥ 3.11
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Quick Start
+
+```bash
+# 1. Install dependencies
+uv sync
+
+# 2. Run the server
+uv run python src/app.py
+
+# 3. Open in browser
+# http://localhost:5000
+
+
 ## Results
 
 ## Documentation
@@ -26,6 +45,10 @@ All references used in this Hackathon can be found in [References](/docs/ REFERE
 
 ### Glossary
 All abbreviations and terms used in this Hackathon can be found in [Glossary](/docs/GLOSSARY.md)
+
+### Future Work
+
+
 
 ## Contributing
 
