@@ -1,16 +1,15 @@
 import io
-import os
-import pandas as pd
 from pathlib import Path
-from flask import Flask, Response, jsonify, request, send_from_directory, redirect
+
+import pandas as pd
+from flask import Flask, Response, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
-BASE = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE / "data"
-DATA_DIR.mkdir(exist_ok=True)
-DATA_FILE = DATA_DIR / "austria_fires.parquet"
+from moonpies.consts import DATA_DIR, ROOT_DIR
 
-app = Flask(__name__, static_folder=str(BASE / "web"), static_url_path="")
+DATA_FILE: Path = DATA_DIR / "harmonized.parquet"
+
+app = Flask(__name__, static_folder=str(ROOT_DIR / "web"), static_url_path="")
 
 
 def _load():
@@ -37,7 +36,7 @@ print(f"Loaded {len(_df):,} rows")
 # Frontend of the
 @app.route("/")
 def index():
-    return send_from_directory(str(BASE / "web"), "index.html")
+    return send_from_directory(str(ROOT_DIR / "web"), "index.html")
 
 # Website health
 @app.route("/health")
