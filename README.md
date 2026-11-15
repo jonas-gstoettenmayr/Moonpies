@@ -1,6 +1,7 @@
 # Moonpies
 
-# Overview
+## Overview
+
 Repository of the Moonpies team for the 2026 NASA space apps challenge.
 
 Team members:
@@ -8,7 +9,7 @@ Team members:
 - Jonas Gstöttenmayr (<jojo.gstoettenmayr@gmail.com>)
 - Stephanie Gstöttenmayr (<stephanie.gstoettenmayr@gmail.com>)
 - David Thomas Lee (<lee.davidtom@proton.me>)
-- Gabriel Boboc (<boboc.gabriel04@gmail.com>) 
+- Gabriel Boboc (<boboc.gabriel04@gmail.com>)
 
 ## Quickstart Guide: Meteomatics Weather Data
 
@@ -23,7 +24,6 @@ This guide helps you fetch and analyze weather data from the Meteomatics API for
 ### Setup Environment
 
 ```bash
-
 # Install dependencies using uv
 uv sync
 
@@ -31,7 +31,18 @@ uv sync
 source .venv/bin/activate
 ```
 
-### How It Works
+### Prepare data
+
+```bash
+# Get data from NASA
+uv run python data/download_firms_europe.py
+
+# After previous one is done
+# Process the data
+uv run src/process_data.py
+```
+
+### Starting webpage
 
 The main application provides a web interface for exploring fire and weather data correlations.
 
@@ -43,15 +54,15 @@ uv run python src/app.py
 # http://localhost:5000
 ```
 
-### Additional Exploration with Meteomatics
+## Additional Exploration with Meteomatics
 
-#### Example: Fetch Weather for a Single Fire Event
+### Example: Fetch Weather for a Single Fire Event
 
 Fetch weather data for the highest FRP fire in Austria 2020:
 
 ```bash
 # Fetch 2 months before, fire day, and 7 days after
-python meteomatics/fetch_weather_for_single_fire.py \
+uv run python meteomatics/fetch_weather_for_single_fire.py \
     --months 2 \
     --days-after 7 \
     --rate 0.5
@@ -60,12 +71,13 @@ python meteomatics/fetch_weather_for_single_fire.py \
 ```
 
 This creates a parquet file with:
+
 - 60+ days of weather data
 - Selection of weather parameters (temperature, humidity, wind speed, wind direction, precipitation 1h, precipitation 24h, evaporation)
 - Fire metadata (FRP, location, date)
 - Fire detection flag
 
-#### Option 2: Fetch Weather for Multiple High FRP Fires
+### Option 2: Fetch Weather for Multiple High FRP Fires
 
 ```bash
 # Fetch weather for all fires with FRP >= 50 MW
@@ -78,16 +90,17 @@ python meteomatics/fetch_weather_for_high_frp_fires.py \
 # Output: data/high_frp_fires_with_weather.parquet
 ```
 
-#### Option 3: Visualize Weather Data
+### Option 3: Visualize Weather Data
 
 Create an interactive HTML visualization:
 
 ```bash
 # Generate HTML with map and charts
-python meteomatics/visualize_fire_weather.py
+uv run python meteomatics/visualize_fire_weather.py
 ```
 
 This creates:
+
 - Interactive map showing fire location in Austria
 - Time series charts of all weather parameters
 - Summary statistics
@@ -95,18 +108,7 @@ This creates:
 
 ## Results
 
-## Raw FIRMS Data
-
-The raw NASA FIRMS (Fire Information for Resource Management System) data can be fetched using the `download_firms_europe.py` script located in the `data/` folder. This script downloads yearly country summaries for all European countries.
-
-```bash
-python data/download_firms_europe.py --start-year 2020 --end-year 2024
-```
-
-## Documentation
-
-
-### Architecture and Design
+## Architecture and Design
 
 ### Meteomatics Data
 
@@ -116,7 +118,7 @@ For detailed information on available weather parameters, API usage, and data fe
 
 ### Project Structure
 
-```
+```text
 Moonpies/
 ├── .gitignore
 ├── .python-version
@@ -130,9 +132,10 @@ Moonpies/
 │   ├── download_firms_europe.py  # Download raw FIRMS data for Europe
 │   ├── fetch_austria_2020.py
 │   ├── fetch_austria_2020_practical.py
-│   ├── harmonized.parquet     # Combined FIRMS data
+│   ├── harmonized.parquet         # Combined FIRMS data, generated
+│   ├── harmonize_grid.parquet     # Grid mixed FIRMS data, generated, needed for web page
 │   ├── single_fire_with_weather.parquet
-│   └── unpack_zip.py
+│   └── unpack_zip.py # script for extracting country from yearly zip
 ├── docs/
 │   ├── GLOSSARY.md
 │   ├── REFERENCES.md
@@ -159,12 +162,12 @@ Moonpies/
 │       ├── merge.py
 │       └── meteomatics.py    # Meteomatics API client
 ├── tests/
-│   ├── test_app.py
 │   └── test_meteomatics.py
 └── web/
     ├── europe_activity.json
     └── index.html
 ```
+
 ### References
 All references used in this Hackathon can be found in [References](/docs/ REFERENCES.md)
 
