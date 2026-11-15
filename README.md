@@ -108,70 +108,37 @@ This creates:
 - Summary statistics
 - Fire day highlighted
 
-## Results
-
 ## Architecture and Design
 
-### Meteomatics Data
+### Overview
 
-For detailed information on available weather parameters, API usage, and data fetching options, see:
-- [data/README.md](data/README.md) - Complete documentation on fetching Austria weather data
-- [meteomatics module](src/moonpies/meteomatics.py) - Python API for Meteomatics
+The application follows a pipeline architecture: data ingestion → processing → visualization.
+
+NASA FIRMS fire data and Meteomatics weather data are fetched independently, then merged based on spatial and temporal alignment. The processed data powers a Flask web application for interactive exploration.
+
+### Key Components
+
+- **Data Ingestion**: `data/` and `src/moonpies/data_ingestion.py` handle fetching and harmonizing raw FIRMS data
+- **Weather Integration**: `src/moonpies/meteomatics.py` provides the Meteomatics API client
+- **Data Processing**: Scripts in `src/moonpies/` merge fire and weather data, calculate correlations
+- **Web Interface**: `src/app.py` serves a Flask application with interactive maps and charts
 
 ### Project Structure
 
 ```text
 Moonpies/
-├── .gitignore
-├── .python-version
-├── LICENSE
-├── README.md
-├── meteo-api.env              # Meteomatics API credentials
-├── pyproject.toml
-├── uv.lock
-├── data/
-│   ├── README.md              # Weather data fetching guide
-│   ├── download_firms_europe.py  # Download raw FIRMS data for Europe
-│   ├── fetch_austria_2020.py
-│   ├── fetch_austria_2020_practical.py
-│   ├── harmonized.parquet         # Combined FIRMS data, generated
-│   ├── harmonize_grid.parquet     # Grid mixed FIRMS data, generated, needed for web page
-│   ├── single_fire_with_weather.parquet
-│   └── unpack_zip.py # script for extracting country from yearly zip
-├── docs/
-│   ├── GLOSSARY.md
-│   ├── REFERENCES.md
-│   └── merge.md
-├── examples/
-│   ├── fetch_weather_for_firms.py
-│   └── meteomatics_example.py
-├── meteomatics/                # Meteomatics-related scripts
-│   ├── add_weather_to_austria.py
-│   ├── fetch_weather_for_high_frp_fires.py
-│   ├── fetch_weather_for_single_fire.py
-│   ├── fire_weather_visualization.html
-│   ├── meteomatics-test.ipynb
-│   └── visualize_fire_weather.py
-├── src/
-│   ├── __init__.py
-│   ├── app.py
-│   ├── explore.ipynb
-│   └── moonpies/              # Python package
-│       ├── __init__.py
-│       ├── add_weather_to_harmonized.py
-│       ├── consts.py
-│       ├── data_ingestion.py
-│       ├── merge.py
-│       └── meteomatics.py    # Meteomatics API client
-├── tests/
-│   └── test_meteomatics.py
-└── web/
-    ├── europe_activity.json
-    └── index.html
+├── data/               # Raw and processed data, data fetching scripts
+├── src/                # Core application and processing logic
+│   ├── app.py          # Flask web server
+│   └── moonpies/       # Python package with data processing modules
+├── meteomatics/        # Weather data fetching and visualization scripts
+├── web/                # Static web assets
+└── docs/               # Documentation
 ```
 
-### Results
+## Results
 
+The project merges NASA FIRMS fire data to analyze fire risk factors. It harmonizes spatial and temporal datasets for Europe and provides processed outputs for analysis. The Flask web interface enables interactive exploration through maps and time series visualizations. Users can examine correlations between weather parameters and fire events.
 
 ### Resources
 #### Databases
@@ -188,19 +155,13 @@ For detailed information on available weather parameters, API usage, and data fe
 ### Future Work
 
 This challenge presents various potential avenues beyond the scope and constraints of the challenge. Below are several potential areas for exploration:
-- With URT 
-
-
-Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
-
-### References
-All references used in this Hackathon can be found below
-
-| # | Author(s) | Year | Title | Source | DOI / URL |
-|---|-----------|------|-------|--------|-----------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
+- Integration of URT-dataset from LANCE allows the potential of predicting the nonlinear propagation of the forest fire
+- Integration of the anomolies to further strengthen the probabilistic model of the fire propagation:
+    - Soil-moisture
+    - Weather anomalies due to El-Nino and La-Nina 
+    - Localised precipation
+- Training a echo state networks ( in particular residual computing) hybrid neural network model trained on classical and quantum thermodynamics as well as quantum machine learning to accurately predict the propagation, direction, etc. of forest fires
+- Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
 
 ### Glossary
 
@@ -213,6 +174,3 @@ The abbreviations used in this challenge is
 | MODIS | Moderate Resolution Imaging Spectroradiometer | [https://terra.nasa.gov/about/terra-instruments/modis](https://terra.nasa.gov/about/terra-instruments/modis) |
 | LANCE | Land, Atmosphere Near real-time Capability for Earth observation | [https://www.earthdata.nasa.gov/data/projects/lance](https://www.earthdata.nasa.gov/data/projects/lance)  |
 | VIIRS | Moderate Resolution Imaging Spectroradiometer | [https://terra.nasa.gov/about/terra-instruments/modis](https://terra.nasa.gov/about/terra-instruments/modis) |
-| ESN | Echo State Networks | |
-| RC | Echo State Networks | |
-| QML | Quantum Machine Learning | |
