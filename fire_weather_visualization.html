@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Weather Data Visualization - 2020-03-24</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #d32f2f;
+            text-align: center;
+            border-bottom: 2px solid #d32f2f;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+        }
+        .fire-day {
+            background-color: #ffebee;
+            padding: 10px;
+            border-left: 4px solid #d32f2f;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Fire Weather Data Visualization</h1>
+        <p style="text-align: center; color: #666;">
+            Interactive analysis of weather conditions before, during, and after a wildfire event
+        </p>
+        
+        
+    <div style="padding: 20px; margin: 20px 0; background-color: #f5f5f5; border-radius: 5px;">
+        <h2>Fire Event Summary</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background-color: #e0e0e0;">
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Parameter</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Value</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;"><b>Fire Date</b></td>
+                <td style="padding: 10px; border: 1px solid #ddd;">2020-03-24</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;"><b>Location</b></td>
+                <td style="padding: 10px; border: 1px solid #ddd;">46.0167°N, 11.3135°E</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;"><b>Max FRP</b></td>
+                <td style="padding: 10px; border: 1px solid #ddd;">154.6 MW</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;"><b>Duration</b></td>
+                <td style="padding: 10px; border: 1px solid #ddd;">1 day(s)</td>
+            </tr>
+        </table>
+        
+        <h3 style="margin-top: 20px;">Weather Statistics</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background-color: #e0e0e0;">
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Parameter</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Min</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Max</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Avg</th>
+                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Fire Day</th>
+            </tr>
+    
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Temperature (°C)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">5.2</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">18.2</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">11.0</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background-color: #ffcccc;">8.0</td>
+            </tr>
+            
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Humidity (%)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">11.4</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">87.2</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">42.4</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background-color: #ffcccc;">24.9</td>
+            </tr>
+            
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Precipitation (mm)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">0.0</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">1.2</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">0.1</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background-color: #ffcccc;">0.0</td>
+            </tr>
+            
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Wind Speed (m/s)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">0.9</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">8.6</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">4.3</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background-color: #ffcccc;">8.0</td>
+            </tr>
+            
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Evapotranspiration (mm)</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">0.8</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">2.8</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">2.0</td>
+                <td style="padding: 10px; border: 1px solid #ddd; background-color: #ffcccc;">2.5</td>
+            </tr>
+            </table></div>
+        
+        <div class="section">
+            <h2>🗺️ Fire Location Map</h2>
+            <div style="height: 500px; width: 100%;"><!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_eb1e5924ae2014972b9f7b23b3266de5 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_eb1e5924ae2014972b9f7b23b3266de5" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_eb1e5924ae2014972b9f7b23b3266de5 = L.map(
+                "map_eb1e5924ae2014972b9f7b23b3266de5",
+                {
+                    center: [47.5, 13.5],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 7,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_0f222f570342d08ba5bce1a19b9924bf = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_0f222f570342d08ba5bce1a19b9924bf.addTo(map_eb1e5924ae2014972b9f7b23b3266de5);
+        
+    
+            var marker_c992f563c1ebd00b158e56fe461237b9 = L.marker(
+                [46.0167, 11.3135],
+                {
+}
+            ).addTo(map_eb1e5924ae2014972b9f7b23b3266de5);
+        
+    
+            var icon_87674af2752c37073784811483ffe7c2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "fire",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_363bd595a03bf79afc282943ab86ece1 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_7e18d4aa39f92c0d5df7db295238089c = $(`<div id="html_7e18d4aa39f92c0d5df7db295238089c" style="width: 100.0%; height: 100.0%;">Fire: 46.0167, 11.3135</div>`)[0];
+                popup_363bd595a03bf79afc282943ab86ece1.setContent(html_7e18d4aa39f92c0d5df7db295238089c);
+            
+        
+
+        marker_c992f563c1ebd00b158e56fe461237b9.bindPopup(popup_363bd595a03bf79afc282943ab86ece1)
+        ;
+
+        
+    
+    
+                marker_c992f563c1ebd00b158e56fe461237b9.setIcon(icon_87674af2752c37073784811483ffe7c2);
+            
+    
+        function geo_json_618527094c6a3de41e98829cf0f4a813_styler(feature) {
+            switch(feature.id) {
+                default:
+                    return {"color": "#000000", "fillColor": "#00ff00", "fillOpacity": 0.1};
+            }
+        }
+
+        function geo_json_618527094c6a3de41e98829cf0f4a813_onEachFeature(feature, layer) {
+
+            layer.on({
+            });
+        };
+        var geo_json_618527094c6a3de41e98829cf0f4a813 = L.geoJson(null, {
+                onEachFeature: geo_json_618527094c6a3de41e98829cf0f4a813_onEachFeature,
+            
+                style: geo_json_618527094c6a3de41e98829cf0f4a813_styler,
+            ...{
+}
+        });
+
+        function geo_json_618527094c6a3de41e98829cf0f4a813_add (data) {
+            geo_json_618527094c6a3de41e98829cf0f4a813
+                .addData(data);
+        }
+            geo_json_618527094c6a3de41e98829cf0f4a813_add({"features": [{"geometry": {"coordinates": [[[9.5, 49.0], [17.2, 49.0], [17.2, 46.4], [9.5, 46.4], [9.5, 49.0]]], "type": "Polygon"}, "id": "0", "type": "Feature"}], "type": "FeatureCollection"});
+
+        
+    
+            geo_json_618527094c6a3de41e98829cf0f4a813.addTo(map_eb1e5924ae2014972b9f7b23b3266de5);
+        
+</script>
+</html></div>
+        </div>
+        
+        <div class="section">
+            <h2>📈 Weather Parameters Over Time</h2>
+            <!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>html, body {height: 100%;}</style>
+</head>
+<body>
+    <div style="height:100%; width:100%;">                        <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-4.1.1.min.js" integrity="sha256-O24V1F27f8pb0glCkelh3cVHLNiHAJ5gCaVtq2aNch8=" crossorigin="anonymous"></script>                <div id="acca1943-7d0c-4996-a9d6-20fea9d9a677" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("acca1943-7d0c-4996-a9d6-20fea9d9a677")) {                    Plotly.newPlot(                        "acca1943-7d0c-4996-a9d6-20fea9d9a677",                        [{"line":{"color":"red"},"marker":{"size":8},"name":"Temperature (\u00b0C)","x":["2020-02-23","2020-02-24","2020-02-25","2020-02-26","2020-02-27","2020-02-28","2020-02-29","2020-03-01","2020-03-02","2020-03-03","2020-03-04","2020-03-05","2020-03-06","2020-03-07","2020-03-08","2020-03-09","2020-03-10","2020-03-11","2020-03-12","2020-03-13","2020-03-14","2020-03-15","2020-03-16","2020-03-17","2020-03-18","2020-03-19","2020-03-20","2020-03-21","2020-03-22","2020-03-23","2020-03-24","2020-03-25","2020-03-26","2020-03-27"],"y":{"dtype":"f8","bdata":"AAAAAAAAKkAAAAAAAAAvQDMzMzMzMyZAmpmZmZmZJEDNzMzMzMwgQJqZmZmZmR9AmpmZmZmZJEAAAAAAAAAYQM3MzMzMzBpAMzMzMzMzIEDNzMzMzMwlQAAAAAAAAB5AzczMzMzMJkAzMzMzMzMpQDMzMzMzMyJAmpmZmZmZGUDNzMzMzMwlQDMzMzMzMzJAZmZmZmZmL0DNzMzMzMwvQM3MzMzMzBRAAAAAAAAAJUBmZmZmZmYoQM3MzMzMzCtAAAAAAAAALkDNzMzMzMwvQJqZmZmZmS9AZmZmZmZmMEAzMzMzMzMnQM3MzMzMzCFAAAAAAAAAIEAAAAAAAAAcQAAAAAAAABpAAAAAAAAAJkA="},"type":"scatter","xaxis":"x","yaxis":"y"},{"line":{"color":"blue"},"name":"Humidity (%)","x":["2020-02-23","2020-02-24","2020-02-25","2020-02-26","2020-02-27","2020-02-28","2020-02-29","2020-03-01","2020-03-02","2020-03-03","2020-03-04","2020-03-05","2020-03-06","2020-03-07","2020-03-08","2020-03-09","2020-03-10","2020-03-11","2020-03-12","2020-03-13","2020-03-14","2020-03-15","2020-03-16","2020-03-17","2020-03-18","2020-03-19","2020-03-20","2020-03-21","2020-03-22","2020-03-23","2020-03-24","2020-03-25","2020-03-26","2020-03-27"],"y":{"dtype":"f8","bdata":"zczMzMzMREAzMzMzMzNFQJqZmZmZmU5AmpmZmZkZP0DNzMzMzMwmQDMzMzMzszFAmpmZmZmZP0DNzMzMzMxVQDMzMzMzc1FAmpmZmZkZRUAAAAAAAAA1QJqZmZmZWUhAMzMzMzOzRkBmZmZmZmYzQJqZmZmZGT1AzczMzMwMTECamZmZmRlEQGZmZmZmpkJAzczMzMzMRkDNzMzMzAxIQDMzMzMz81RAMzMzMzNzR0DNzMzMzAxEQM3MzMzMzENAzczMzMwMRUDNzMzMzIxFQM3MzMzMjEVAmpmZmZlZQ0DNzMzMzIxNQDMzMzMzMzpAZmZmZmbmOECamZmZmRk8QDMzMzMzs0lAAAAAAABASEA="},"yaxis":"y2","type":"scatter","xaxis":"x"},{"marker":{"color":"cyan"},"name":"Precipitation (mm)","x":["2020-02-23","2020-02-24","2020-02-25","2020-02-26","2020-02-27","2020-02-28","2020-02-29","2020-03-01","2020-03-02","2020-03-03","2020-03-04","2020-03-05","2020-03-06","2020-03-07","2020-03-08","2020-03-09","2020-03-10","2020-03-11","2020-03-12","2020-03-13","2020-03-14","2020-03-15","2020-03-16","2020-03-17","2020-03-18","2020-03-19","2020-03-20","2020-03-21","2020-03-22","2020-03-23","2020-03-24","2020-03-25","2020-03-26","2020-03-27"],"y":{"dtype":"f8","bdata":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXI\u002fC9Shc8z97FK5H4XqEPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4XoUrkfh4j8AAAAAAAAAAAAAAAAAAAAAKVyPwvUovD8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},"type":"bar","xaxis":"x2","yaxis":"y3"},{"line":{"color":"green"},"marker":{"size":8},"name":"Wind Speed (m\u002fs)","x":["2020-02-23","2020-02-24","2020-02-25","2020-02-26","2020-02-27","2020-02-28","2020-02-29","2020-03-01","2020-03-02","2020-03-03","2020-03-04","2020-03-05","2020-03-06","2020-03-07","2020-03-08","2020-03-09","2020-03-10","2020-03-11","2020-03-12","2020-03-13","2020-03-14","2020-03-15","2020-03-16","2020-03-17","2020-03-18","2020-03-19","2020-03-20","2020-03-21","2020-03-22","2020-03-23","2020-03-24","2020-03-25","2020-03-26","2020-03-27"],"y":{"dtype":"f8","bdata":"MzMzMzMzD0CamZmZmZn5P2ZmZmZmZgpAzczMzMzMDEAAAAAAAAAeQJqZmZmZmRVAmpmZmZmZ+T\u002fNzMzMzMzsP2ZmZmZmZhpAzczMzMzMFkBmZmZmZmb+P2ZmZmZmZv4\u002fmpmZmZmZF0AzMzMzMzMfQJqZmZmZmR9AZmZmZmZm\u002fj9mZmZmZmYSQM3MzMzMzBRAZmZmZmZmEEDNzMzMzMwMQM3MzMzMzPw\u002fmpmZmZmZCUBmZmZmZmYKQAAAAAAAAAhAmpmZmZmZDUAAAAAAAAAQQGZmZmZmZhBAMzMzMzMzF0CamZmZmZkJQDMzMzMzMxVAAAAAAAAAIEAzMzMzMzMhQDMzMzMzM\u002fs\u002fmpmZmZmZG0A="},"type":"scatter","xaxis":"x3","yaxis":"y4"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05}}},"xaxis":{"anchor":"y","domain":[0.0,0.94]},"yaxis":{"anchor":"x","domain":[0.7333333333333334,1.0],"title":{"text":"\u00b0C"}},"yaxis2":{"anchor":"x","overlaying":"y","side":"right","title":{"text":"%"}},"xaxis2":{"anchor":"y3","domain":[0.0,0.94]},"yaxis3":{"anchor":"x2","domain":[0.3666666666666667,0.6333333333333333],"title":{"text":"mm"}},"xaxis3":{"anchor":"y4","domain":[0.0,0.94],"title":{"text":"Date"}},"yaxis4":{"anchor":"x3","domain":[0.0,0.26666666666666666],"title":{"text":"m\u002fs"}},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Temperature & Humidity","x":0.47,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Precipitation","x":0.47,"xanchor":"center","xref":"paper","y":0.6333333333333333,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Wind Speed & Direction","x":0.47,"xanchor":"center","xref":"paper","y":0.26666666666666666,"yanchor":"bottom","yref":"paper"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x","y":1,"yanchor":"bottom","yref":"y domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x2","y":1,"yanchor":"bottom","yref":"y3 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x3","y":1,"yanchor":"bottom","yref":"y4 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x","y":1,"yanchor":"bottom","yref":"y domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x2","y":1,"yanchor":"bottom","yref":"y3 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x3","y":1,"yanchor":"bottom","yref":"y4 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x","y":1,"yanchor":"bottom","yref":"y domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x2","y":1,"yanchor":"bottom","yref":"y3 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x3","y":1,"yanchor":"bottom","yref":"y4 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x","y":1,"yanchor":"bottom","yref":"y domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x2","y":1,"yanchor":"bottom","yref":"y3 domain"},{"showarrow":false,"text":"Fire Day","x":"2020-03-24","xanchor":"center","xref":"x3","y":1,"yanchor":"bottom","yref":"y4 domain"}],"shapes":[{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x","y0":0,"y1":1,"yref":"y domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x2","y0":0,"y1":1,"yref":"y3 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x3","y0":0,"y1":1,"yref":"y4 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x","y0":0,"y1":1,"yref":"y domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x2","y0":0,"y1":1,"yref":"y3 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x3","y0":0,"y1":1,"yref":"y4 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x","y0":0,"y1":1,"yref":"y domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x2","y0":0,"y1":1,"yref":"y3 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x3","y0":0,"y1":1,"yref":"y4 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x","y0":0,"y1":1,"yref":"y domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x2","y0":0,"y1":1,"yref":"y3 domain"},{"line":{"color":"red","dash":"dash"},"type":"line","x0":"2020-03-24","x1":"2020-03-24","xref":"x3","y0":0,"y1":1,"yref":"y4 domain"}]},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+        
+        <div class="section fire-day">
+            <h3>🔥 Fire Day Analysis</h3>
+            <p><strong>Date:</strong> 2020-03-24</p>
+            <p><strong>Location:</strong> 46.0167°N, 11.3135°E</p>
+            <p><strong>Max FRP:</strong> 154.6 MW</p>
+            <p style="color: #d32f2f;">
+                The red vertical line in the charts above marks the fire day.
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding: 20px; color: #666; font-size: 0.9em;">
+            Data sources: NASA FIRMS (Fire Information for Resource Management System) & Meteomatics API
+        </div>
+    </div>
+</body>
+</html>
