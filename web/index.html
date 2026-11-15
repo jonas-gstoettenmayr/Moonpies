@@ -29,7 +29,7 @@
   header p{margin:0; color:var(--muted); font-size:.8rem}
   main{flex:1; display:flex; min-height:0}
   #map-wrap{flex:1; position:relative; min-width:0}
-  #map{position:absolute; inset:0; background:#aad3df}
+  #map{position:absolute; inset:0; background:#0b0e14}
   #map-controls{
     position:absolute; top:.8rem; left:.8rem; z-index:1000;
     display:flex; align-items:center; gap:.45rem; flex-wrap:wrap;
@@ -41,6 +41,24 @@
     background:var(--panel2); color:var(--text); border:1px solid var(--line);
     border-radius:6px; padding:.32rem .5rem; font-size:.85rem; color-scheme:dark;
   }
+  select.flt{
+    appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-color:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:6px; padding:.32rem 1.5rem .32rem .5rem; font-size:.85rem;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b94ab' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right .45rem center;
+  }
+  select.flt:hover{border-color:var(--accent)}
+  select.flt:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+  #cal-year{
+    appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-color:var(--bg); color:var(--text); border:1px solid var(--line);
+    border-radius:8px; padding:.35rem 1.7rem .35rem .65rem; font-size:.9rem; font-weight:600;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffb03a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right .55rem center;
+  }
+  #cal-year:hover{border-color:var(--accent)}
+  #cal-year:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
   .btn{
     background:var(--panel2); color:var(--text); border:1px solid var(--line);
     border-radius:6px; padding:.32rem .6rem; font-size:.85rem; cursor:pointer;
@@ -110,9 +128,12 @@
   <section id="map-wrap">
     <div id="map"></div>
     <div id="map-controls">
-      <button class="btn" id="prev-day" title="Previous day">&#9664;</button>
-      <input type="date" id="date-input"/>
-      <button class="btn" id="next-day" title="Next day">&#9654;</button>
+      <select id="flt-country" class="flt" title="Filter by country"><option value="europe">All Europe</option></select>
+      <select id="flt-sat" class="flt" title="Filter by satellite system">
+        <option value="all">All satellites</option>
+        <option value="modis">MODIS</option>
+        <option value="viirs">VIIRS</option>
+      </select>
       <span id="day-count">—</span>
     </div>
     <div id="legend">
@@ -127,7 +148,10 @@
       <div id="cal-nav">
         <button class="btn" id="prev-month">&#9664;</button>
         <span id="cal-title"></span>
-        <button class="btn" id="next-month">&#9654;</button>
+        <div style="display:flex;gap:.3rem;align-items:center">
+          <button class="btn" id="next-month">&#9654;</button>
+          <select id="cal-year" title="Year"></select>
+        </div>
       </div>
       <div id="cal-grid"></div>
       <div id="cal-total"></div>
@@ -159,6 +183,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DOW = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 
 let MIN_DATE, MAX_DATE, currentDate, calYear, calMonth;
+let fltCountry = 'europe', fltSat = 'all';
 let map, cluster;
 
 const $ = id => document.getElementById(id);
@@ -166,6 +191,13 @@ const $ = id => document.getElementById(id);
 function iso(d){ return d.toISOString().slice(0,10); }
 function parseIso(s){ const [y,m,dd] = s.split('-').map(Number); return new Date(Date.UTC(y, m-1, dd)); }
 function clampDate(d){ return new Date(Math.min(MAX_DATE, Math.max(MIN_DATE, d))); }
+
+function fltLabel(){
+  const parts = [];
+  if (fltCountry !== 'europe') parts.push(fltCountry.replaceAll('_',' '));
+  if (fltSat !== 'all') parts.push(fltSat.toUpperCase());
+  return parts.length ? ' · ' + parts.join(' · ') : '';
+}
 
 function frpColor(frp){
   if (frp < 10)  return '#ffd54f';
@@ -186,37 +218,45 @@ async function init(){
     (meta.markers.viirs_start ? ` · VIIRS from ${meta.markers.viirs_start}` : '') +
     (meta.markers.modis_end ? ` · MODIS until ${meta.markers.modis_end}` : '');
 
-  const di = $('date-input');
-  di.min = meta.min_date; di.max = meta.max_date;
   $('exp-start').min = meta.min_date; $('exp-start').max = meta.max_date;
   $('exp-end').min = meta.min_date; $('exp-end').max = meta.max_date;
   $('exp-start').value = meta.min_date;
   $('exp-end').value = meta.max_date;
 
   const countries = await (await fetch('/api/countries')).json();
-  const sel = $('exp-region');
   for (const c of countries.countries){
+    for (const target of [$('exp-region'), $('flt-country')]){
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c.replaceAll('_',' ');
+      target.appendChild(o);
+    }
+  }
+  const ysel = $('cal-year');
+  for (const y of meta.years){
     const o = document.createElement('option');
-    o.value = c; o.textContent = c.replaceAll('_',' ');
-    sel.appendChild(o);
+    o.value = y; o.textContent = y;
+    ysel.appendChild(o);
   }
 
   map = L.map('map', {center:[48.5, 11], zoom:4, minZoom:3, worldCopyJump:true});
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:19, attribution:'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+  }).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:19
   }).addTo(map);
   cluster = L.markerClusterGroup({chunkedLoading:true, disableClusteringAtZoom:10, maxClusterRadius:60});
   map.addLayer(cluster);
 
   currentDate = MAX_DATE;
   calYear = MAX_DATE.getUTCFullYear(); calMonth = MAX_DATE.getUTCMonth()+1;
-  di.value = iso(currentDate);
+  ysel.value = calYear;
 
-  di.addEventListener('change', () => { if (di.value) setDate(parseIso(di.value)); });
-  $('prev-day').onclick = () => setDate(new Date(currentDate.getTime() - 86400000));
-  $('next-day').onclick = () => setDate(new Date(currentDate.getTime() + 86400000));
   $('prev-month').onclick = () => shiftMonth(-1);
   $('next-month').onclick = () => shiftMonth(1);
+  $('cal-year').onchange = () => { calYear = +$('cal-year').value; loadCalendar(); };
+  $('flt-country').onchange = () => { fltCountry = $('flt-country').value; loadCalendar(); loadHotspots(); };
+  $('flt-sat').onchange = () => { fltSat = $('flt-sat').value; loadCalendar(); loadHotspots(); };
   $('exp-btn').onclick = doExport;
 
   await loadCalendar();
@@ -225,7 +265,6 @@ async function init(){
 
 function setDate(d){
   currentDate = clampDate(d);
-  $('date-input').value = iso(currentDate);
   const y = currentDate.getUTCFullYear(), m = currentDate.getUTCMonth()+1;
   if (y !== calYear || m !== calMonth){ calYear = y; calMonth = m; }
   loadCalendar();
@@ -244,7 +283,7 @@ function shiftMonth(delta){
 
 async function loadCalendar(){
   const d = await (await fetch(`/api/calendar?year=${calYear}&month=${calMonth}`)).json();
-  $('cal-title').textContent = `${MONTHS[d.month-1]} ${d.year}`;
+  $('cal-title').textContent = MONTHS[d.month-1];
   const counts = {};
   for (const x of d.days) counts[x.day] = x.count;
   const max = Math.max(d.max, 1);
@@ -265,12 +304,12 @@ async function loadCalendar(){
   grid.querySelectorAll('.day:not(.empty)').forEach(el => {
     el.onclick = () => setDate(parseIso(el.dataset.date));
   });
-  $('cal-total').innerHTML = `Total this month: <b>${d.total.toLocaleString()}</b> hotspots · busiest day: <b>${d.max.toLocaleString()}</b>`;
+  $('cal-total').innerHTML = `Total this month: <b>${d.total.toLocaleString()}</b> hotspots · busiest day: <b>${d.max.toLocaleString()}</b>${fltLabel()}`;
 }
 
 async function loadHotspots(){
   const dateStr = iso(currentDate);
-  const d = await (await fetch(`/api/hotspots?date=${dateStr}`)).json();
+  const d = await (await fetch(`/api/hotspots?date=${dateStr}&country=${fltCountry}&satellite=${fltSat}`)).json();
   cluster.clearLayers();
   const markers = [];
   for (let i = 0; i < d.count; i++){
@@ -291,7 +330,7 @@ async function loadHotspots(){
     markers.push(m);
   }
   cluster.addLayers(markers);
-  $('day-count').innerHTML = `<b>${d.count.toLocaleString()}</b> hotspots on ${d.date}`;
+  $('day-count').innerHTML = `<b>${d.count.toLocaleString()}</b> hotspots on ${d.date}${fltLabel()}`;
 }
 
 function doExport(){

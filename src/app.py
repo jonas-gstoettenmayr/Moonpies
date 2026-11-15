@@ -43,6 +43,33 @@ MARKERS = {
 }
 print(f"VIIRS starts {MARKERS['viirs_start']}, MODIS ends {MARKERS['modis_end']}")
 
+# Years that actually have data (drives the calendar year dropdown)
+YEARS: list[int] = sorted(_df["acq_date"].dt.year().unique().to_list())
+
+
+def _with_country(df: pl.DataFrame, country: str | None) -> pl.DataFrame:
+    """Keep only rows whose countries list contains the country (None/'europe' = all)"""
+    if country and country.lower() != "europe":
+        df = df.filter(pl.col("countries").list.contains(country))
+    return df
+
+
+def _with_satellite(df: pl.DataFrame, satellite: str | None) -> pl.DataFrame:
+    """Keep only rows of one satellite system: 'modis' (Terra/Aqua) or 'viirs' (N*/SNPP)"""
+    s = (satellite or "").lower()
+    if s == "modis":
+        df = df.filter(
+            pl.col("satellites").list.contains("Terra")
+            | pl.col("satellites").list.contains("Aqua")
+        )
+    elif s == "viirs":
+        df = df.filter(
+            pl.col("satellites")
+            .list.eval(pl.element().str.starts_with("N") | (pl.element() == "SNPP"))
+            .list.any()
+        )
+    return df
+
 
 def _filter_range(
     df: pl.DataFrame, start: date, end: date, region: str | None = None
@@ -53,9 +80,7 @@ def _filter_range(
     country name and keeps only rows whose countries list contains it.
     """
     df = df.filter((pl.col("acq_date") >= start) & (pl.col("acq_date") <= end))
-    if region and region.lower() != "europe":
-        df = df.filter(pl.col("countries").list.contains(region))
-    return df
+    return _with_country(df, region)
 
 
 def _csv_frame(df: pl.DataFrame) -> pl.DataFrame:
@@ -92,6 +117,7 @@ def meta():
         "min_date": MIN_DATE.isoformat(),
         "max_date": MAX_DATE.isoformat(),
         "rows": _df.height,
+        "years": YEARS,
         "markers": MARKERS,
     })
 
@@ -110,14 +136,18 @@ def countries():
 # Calendar: hotspot count per day of one month
 @app.route("/api/calendar")
 def calendar():
-    """Hotspot count per day for a given year/month (drives the side calendar)
+    """Hotspot count per day for a given year/month (drives the side calendar).
+
+    Optional ?country and ?satellite (modis/viirs) narrow the counts down.
 
     Returns:
         _type_: JSON with year, month, days=[{day, count}], total, max
     """
     year = int(request.args.get("year", MAX_DATE.year))
     month = int(request.args.get("month", MAX_DATE.month))
-    df = _df.filter(
+    df = _with_satellite(
+        _with_country(_df, request.args.get("country")), request.args.get("satellite")
+    ).filter(
         (pl.col("acq_date").dt.year() == year)
         & (pl.col("acq_date").dt.month() == month)
     )
@@ -140,13 +170,16 @@ def calendar():
 def hotspots():
     """All hotspots for one day (?date=YYYY-MM-DD) for the map.
 
+    Optional ?country and ?satellite (modis/viirs) narrow the hotspots down.
     brightness is coalesced across MODIS (brightness) and VIIRS (bright_ti4/ti5).
 
     Returns:
         _type_: JSON with date, count and columnar arrays lat/lon/brightness/frp/...
     """
     d = date.fromisoformat(request.args.get("date", MAX_DATE.isoformat()))
-    df = _df.filter(pl.col("acq_date") == d)
+    df = _with_satellite(
+        _with_country(_df, request.args.get("country")), request.args.get("satellite")
+    ).filter(pl.col("acq_date") == d)
     df = df.with_columns(
         pl.coalesce(
             [pl.col("brightness"), pl.col("bright_ti4"), pl.col("bright_ti5")]
