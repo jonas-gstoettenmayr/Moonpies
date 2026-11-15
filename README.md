@@ -108,17 +108,17 @@ This creates:
 - Summary statistics
 - Fire day highlighted
 
-## Results
+### Architecture and Design
 
-## Architecture and Design
+Due to time constraint,
 
+#### Super Intelligence 
 
+The following tools were used for the project
 
-### Meteomatics Data
+| Tool | Application | 
+| --- | --- |
 
-For detailed information on available weather parameters, API usage, and data fetching options, see:
-- [data/README.md](data/README.md) - Complete documentation on fetching Austria weather data
-- [meteomatics module](src/moonpies/meteomatics.py) - Python API for Meteomatics
 
 ### Project Structure
 
@@ -172,9 +172,30 @@ Moonpies/
     └── index.html
 ```
 
-### References
-All references used in this Hackathon can be found below
+### Results
 
+
+### Resources
+#### Databases
+
+**NASA Fire Information for Resource Management System**: [https://firms.modaps.eosdis.nasa.gov/](https://firms.modaps.eosdis.nasa.gov/) 
+**Meteomatics API for weather data**: [https://www.meteomatics.com/en/weather-api/](https://www.meteomatics.com/en/weather-api/)
+
+##### Meteomatics Data
+
+For detailed information on available weather parameters, API usage, and data fetching options, see:
+- [data/README.md](data/README.md) - Complete documentation on fetching Austria weather data
+- [meteomatics module](src/moonpies/meteomatics.py) - Python API for Meteomatics
+
+### Future Work
+
+This challenge presents various potential avenues beyond the scope and constraints of the challenge. Below are several potential areas for exploration:
+- With URT 
+
+
+Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
+
+### References
 All references used in this Hackathon can be found below
 
 | # | Author(s) | Year | Title | Source | DOI / URL |
@@ -197,20 +218,3 @@ The abbreviations used in this challenge is
 | ESN | Echo State Networks | |
 | RC | Echo State Networks | |
 | QML | Quantum Machine Learning | |
-
-### Future Work
-
-This challenge presents various avenues for explorations beyond the constraints of the challenge scope. These were several
-
-
-Integrating more information from Meteomatics to correlate periods of low rain and low humidity and strong winds to fire safety risks.
-
-
-## Resources
-
-### Data bases
-
-**NASA Fire Information for Resource Management System**: https://firms.modaps.eosdis.nasa.gov/
-**Meteomatics API for weather data**: https://www.meteomatics.com/en/weather-api/
-
-### Inspiration
