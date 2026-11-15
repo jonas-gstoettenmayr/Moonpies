@@ -95,7 +95,13 @@ This creates:
 
 ## Results
 
+## Raw FIRMS Data
 
+The raw NASA FIRMS (Fire Information for Resource Management System) data can be fetched using the `download_firms_europe.py` script located in the `data/` folder. This script downloads yearly country summaries for all European countries.
+
+```bash
+python data/download_firms_europe.py --start-year 2020 --end-year 2024
+```
 
 ## Documentation
 
@@ -121,6 +127,7 @@ Moonpies/
 ├── uv.lock
 ├── data/
 │   ├── README.md              # Weather data fetching guide
+│   ├── download_firms_europe.py  # Download raw FIRMS data for Europe
 │   ├── fetch_austria_2020.py
 │   ├── fetch_austria_2020_practical.py
 │   ├── harmonized.parquet     # Combined FIRMS data
